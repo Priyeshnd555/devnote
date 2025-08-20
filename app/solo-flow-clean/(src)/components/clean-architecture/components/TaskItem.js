@@ -162,15 +162,16 @@ function ActionIcons({ task, onAction, setNoUpdatesError, setUpdateField }) {
 
 function DoneRemarks({ task }) {
   return (
-    <div className="mt-2">
-      <p className="text-xs text-gray-500">
+    <div className="mt-2 text-sm text-gray-400 border-l-2 border-gray-600 pl-2">
+      <b>Reason to Mark as Done: </b>
+
+      {task.doneRemarks && (
+        <p className="italic mt-1 font-medium ">{task.doneRemarks}</p>
+      )}
+      <br></br>
+      <p className="mt-1 font-medium">
         Completed: {new Date(task.completedAt).toLocaleString()}
       </p>
-      {task.doneRemarks && (
-        <p className="text-xs text-gray-400 mt-1">
-          Remarks: {task.doneRemarks}
-        </p>
-      )}
     </div>
   );
 }
@@ -195,14 +196,15 @@ function PausedRemarks({ isEditing, task, handleEdit, setIsEditing }) {
           onClick={() => setIsEditing("pausedContext")}
         >
           {task.pausedContext}
-            <p className="mt-1 font-medium">
-              Resume: {task.resumeDate}
-              {task.resumeDate
-                ? new Date(task.resumeDate).toLocaleDateString(undefined, {
-                    timeZone: "UTC",
-                  })
-                : "anytime"}
-            </p>
+          <p className="mt-1 font-medium">
+            <br></br>
+            Resume: {task.resumeDate}
+            {task.resumeDate
+              ? new Date(task.resumeDate).toLocaleDateString(undefined, {
+                  timeZone: "UTC",
+                })
+              : "anytime"}
+          </p>
         </p>
       )}
     </div>
