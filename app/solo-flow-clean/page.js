@@ -247,7 +247,11 @@ export default function App() {
                 {tasksByStatus[view]?.length > 0 ? (
                   tasksByStatus[view]
                     .sort(
-                      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                      (a, b) =>
+                        new Date(
+                          view === "done" ? b.completedAt : b.createdAt
+                        ) -
+                        new Date(view === "done" ? a.completedAt : a.createdAt)
                     )
                     .map((task) => (
                       <TaskItem
