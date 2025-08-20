@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SoloDev — Brutalist Task System</title>
+<style>
+/* =========================
+   BRUTALIST THEME (CSS)
+   Strong, blocky, no-nonsense
+   ========================= */
+:root{
+  --bg:#ffffff;
+  --fg:#0b0b0b;
+  --muted:#666;
+  --accent:#ff2d55;
+  --accent2:#0a84ff;
+  --panel:#f6f6f6;
+  --danger:#d7263d;
+  --ok:#0aa958;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+.header{
+  display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:6px solid var(--fg);
+  background:linear-gradient(90deg,#fff 0%, #f8f8f8 100%);
+}
+.brand{font-weight:800;font-size:20px;letter-spacing:0.6px;font-family:var(--mono);}
+.subtitle{font-size:12px;color:var(--muted);margin-left:10px;font-weight:600}
+.container{display:grid;grid-template-columns:320px 1fr 360px;gap:18px;padding:18px;height:calc(100% - 76px)}
+.panel{
+  background:var(--panel);padding:14px;border:6px solid var(--fg);min-height:120px;overflow:auto;
+}
+.left-col{display:flex;flex-direction:column;gap:14px}
+.quick-capture textarea{width:100%;height:70px;border:4px solid var(--fg);padding:10px;font-family:var(--mono);font-size:13px;resize:none}
+.btn{
+  display:inline-block;padding:8px 12px;border:4px solid var(--fg);background:transparent;font-weight:700;font-family:var(--mono);cursor:pointer;
+  text-transform:uppercase;font-size:12px;margin-right:6px
+}
+.btn.primary{background:var(--fg);color:var(--bg)}
+.row{display:flex;gap:10px;align-items:center}
+.section-title{font-weight:900;margin-bottom:8px;font-size:13px}
+.task{display:flex;align-items:flex-start;gap:10px;padding:8px;border-bottom:2px dashed rgba(0,0,0,0.06)}
+.task .title{font-weight:700;font-family:var(--mono)}
+.task .meta{font-size:12px;color:var(--muted)}
+.small{font-size:12px;color:var(--muted)}
+.center{display:flex;align-items:center;justify-content:center}
+.today-tasks .task{border-left:6px solid transparent;padding-left:12px}
+.tag{display:inline-block;padding:3px 6px;border:2px solid var(--fg);font-size:11px;font-weight:800}
+.capacity-bar{height:16px;border:4px solid var(--fg);background:#fff;padding:3px;margin-top:8px}
+.capacity-fill{height:100%;background:var(--accent2);display:block;transition:width .2s}
+.footer-note{font-size:12px;color:var(--muted);margin-top:8px}
+.big-cta{display:block;padding:12px 16px;border:6px solid var(--fg);background:var(--fg);color:#fff;font-weight:900;font-family:var(--mono);text-align:center}
+.mode-pill{padding:6px 8px;border:3px solid var(--fg);font-weight:800;font-family:var(--mono)}
+.alert{padding:10px;border:4px solid var(--danger);background:#fff1f2;color:var(--danger);font-weight:800}
+.progress-entry{border-top:2px solid rgba(0,0,0,0.06);padding:6px 0}
+.switch{display:inline-flex;align-items:center;gap:8px}
+.kv{font-weight:900}
+.small-muted{font-size:12px;color:var(--muted)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.idea-item{padding:8px;border:2px dashed rgba(0,0,0,0.06)}
+.undo{color:var(--accent);cursor:pointer;font-weight:800}
+.hidden{display:none}
+.rage{background:#fff4e6;border:4px solid #ff9f1c;padding:10px;font-weight:800}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div style="display:flex;align-items:center">
+    <div class="brand">SOLO • BRUTAL</div>
+    <div class="subtitle">— No-nonsense task & reminder system for the tired dev</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div id="modeDisplay" class="mode-pill">Mode: Normal</div>
+    <button id="pauseBtn" class="btn">Pause Mode</button>
+    <button id="undoBtn" class="btn">Undo</button>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="container">
+
+  <!-- LEFT: Inbox + Vault + Quick Capture -->
+  <div class="left-col">
+    <div class="panel quick-capture" id="capturePanel">
+      <div class="section-title">Quick Capture (hotkey: <span class="kv">c</span>)</div>
+      <textarea id="captureText" placeholder="Type anything: task, idea, bug. Use `project:...` or `due:tomorrow`"></textarea>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="captureBtn" class="btn primary">Capture</button>
+        <button id="captureIdeaBtn" class="btn">To Idea Vault</button>
+        <button id="captureVoiceBtn" class="btn">Voice (experimental)</button>
+      </div>
+      <div class="footer-note">Brutal hint: capture fast. We'll sort it later.</div>
+    </div>
+
+    <div class="panel" id="inboxPanel">
+      <div class="section-title">Inbox</div>
+      <div id="inboxList"></div>
+      <div style="margin-top:8px" class="small-muted">Tip: drag to Today or click →</div>
+    </div>
+
+    <div class="panel" id="vaultPanel">
+      <div class="section-title">Idea Vault</div>
+      <div id="vaultList"></div>
+      <div class="footer-note">Ideas are parked here, not to be acted on impulsively.</div>
+    </div>
+  </div>
+
+  <!-- CENTER: Today / Weekly Plan / Progress -->
+  <div class="panel" id="mainPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="section-title">Today</div>
+        <div class="small-muted">Morning pulse: <span id="moodDisplay">Normal</span></div>
+      </div>
+      <div style="text-align:right">
+        <div class="small muted">Capacity</div>
+        <div id="capacityText" class="kv small-muted">--</div>
+        <div class="capacity-bar" aria-hidden="true"><span id="capacityFill" class="capacity-fill" style="width:0%"></span></div>
+      </div>
+    </div>
+
+    <div class="today-tasks" id="todayList" style="margin-top:12px;"></div>
+
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+      <button id="planWeekBtn" class="btn">Open Weekly Plan</button>
+      <button id="focusBtn" class="btn">Focus Mode</button>
+      <button id="chaosBtn" class="btn">Chaos Mode</button>
+      <button id="normalBtn" class="btn">Normal Mode</button>
+      <div style="margin-left:auto" class="small-muted">Active limit: <span id="activeLimit">5</span></div>
+    </div>
+
+    <hr style="margin:12px 0;border:none;border-top:6px solid var(--fg)">
+
+    <div class="section-title">Weekly Plan</div>
+    <div id="weekPlan" class="small-muted">(click a day to add tasks)</div>
+    <div style="margin-top:8px" id="weekGrid" class="grid-2"></div>
+
+    <hr style="margin:12px 0;border:none;border-top:6px solid var(--fg)">
+
+    <div class="section-title">Progress Log (Auto)</div>
+    <div id="progressLog"></div>
+  </div>
+
+  <!-- RIGHT: Controls / Settings / Rage-catcher -->
+  <div class="panel" id="rightPanel">
+    <div class="section-title">System</div>
+    <div class="row"><div class="kv">Notifications</div>
+      <div style="margin-left:auto" class="switch"><input id="notifyToggle" type="checkbox" /> Push</div>
+    </div>
+    <div style="margin-top:10px" class="row"><div class="kv">Undo stack</div><div style="margin-left:auto" id="undoCount" class="small-muted">0</div></div>
+
+    <div style="margin-top:12px" class="section-title">Design Guardrails</div>
+    <ul>
+      <li class="small-muted">Daily capacity computed from last 7 days.</li>
+      <li class="small-muted">Max today tasks = capacity (min 1, max 8).</li>
+      <li class="small-muted">Pause mode hides tasks except one tiny task.</li>
+    </ul>
+
+    <div style="margin-top:12px" class="section-title">Rage catcher</div>
+    <div id="rageBox" class="rage hidden">
+      <div>Feeling like deleting a project? Vent here — it'll be soft deleted instead.</div>
+      <textarea id="rageInput" style="width:100%;height:70px;border:4px solid var(--fg);margin-top:8px;font-family:var(--mono)"></textarea>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="ventBtn" class="btn primary">Vent & Pause</button>
+        <button id="softDeleteBtn" class="btn">Soft Delete</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px" class="section-title">Shortcuts</div>
+    <div class="small-muted">
+      c = capture focus<br/> t = open today<br/> v = open vault
+    </div>
+
+    <div style="margin-top:18px">
+      <button id="exportBtn" class="btn">Export JSON</button>
+      <button id="resetBtn" class="btn">Reset All</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     SINGLE-FILE APP CODE (JS)
+     Structured by architecture
+     ============================ -->
+<script>
+/* =========================
+   DOMAIN ENTITIES
+   Pure data and domain behaviors
+   ========================= */
+const domain = (function(){
+  class Id {
+    static make(){ return 'id_' + Math.random().toString(36).slice(2,9); }
+  }
+
+  class Task {
+    constructor({id,title,project,reason,estimate,createdAt,status,energy,automated,due}) {
+      this.id = id || Id.make();
+      this.title = title || '';
+      this.project = project || null;
+      this.reason = reason || '';
+      this.estimate = estimate || 30; // minutes
+      this.createdAt = createdAt || new Date().toISOString();
+      this.status = status || 'inbox'; // inbox | today | backlog | done | archived | paused | vault
+      this.energy = energy || 'medium'; // low|medium|high
+      this.automated = !!automated;
+      this.due = due || null;
+      this.deleted = false; // soft-delete flag
+    }
+    markDone(){
+      if(this.automated) {
+        // require explicit confirm externally
+      }
+      this.status = 'done';
+    }
+    moveToToday() { this.status = 'today'; }
+    moveToInbox() { this.status = 'inbox'; }
+    archive(){ this.status = 'archived' }
+    softDelete(){ this.deleted = true; this.status = 'archived' }
+    togglePause(){ this.status = (this.status==='paused') ? 'inbox' : 'paused' }
+  }
+
+  class ProgressEntry {
+    constructor({id,taskId,summary,createdAt}) {
+      this.id = id || Id.make();
+      this.taskId = taskId;
+      this.summary = summary;
+      this.createdAt = createdAt || new Date().toISOString();
+    }
+  }
+
+  return {Id, Task, ProgressEntry}
+})();
+
+/* =========================
+   PORTS (interfaces)
+   Abstract behaviors that use-cases rely on
+   Implementations live in adapters section
+   ========================= */
+const ports = (function(){
+  // Note: JS has no interfaces; these are docs for adapters.
+  return {
+    PersistencePort: 'saveTask|getTask|queryTasks|saveProgress|getAll',
+    NotificationPort: 'scheduleReminder|cancelReminder|notifyNow',
+    ClockPort: 'now|schedule'
+  };
+})();
+
+/* =========================
+   ADAPTERS (concrete implementations)
+   localStorage persistence, Notification via Notification API, simple scheduler
+   ========================= */
+const adapters = (function(){
+  const STORAGE_KEY = 'solo_brutalist_v1';
+  function loadAll(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return {tasks:[],progress:[],prefs:{mode:'Normal',notify:false},undo:[]};
+      return JSON.parse(raw);
+    }catch(e){
+      console.error('loadAll error',e);
+      return {tasks:[],progress:[],prefs:{mode:'Normal',notify:false},undo:[]};
+    }
+  }
+  function saveAll(state){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  let state = loadAll();
+  if(!state.tasks) state.tasks = [];
+  if(!state.progress) state.progress = [];
+  if(!state.prefs) state.prefs = {mode:'Normal',notify:false};
+  if(!state.undo) state.undo = [];
+
+  // PersistenceAdapter
+  const PersistenceAdapter = {
+    saveTask: async function(task){
+      const existingIndex = state.tasks.findIndex(t=>t.id===task.id);
+      if(existingIndex>=0) state.tasks[existingIndex] = task;
+      else state.tasks.push(task);
+      saveAll(state);
+    },
+    getTask: async function(id){ return (state.tasks.find(t=>t.id===id)||null); },
+    queryTasks: async function(filter){
+      // naive filter
+      return state.tasks.filter(t=>{
+        if(filter && filter.status && t.status !== filter.status) return false;
+        if(filter && filter.q && !(t.title||'').toLowerCase().includes(filter.q.toLowerCase())) return false;
+        if(t.deleted) return false;
+        return true;
+      });
+    },
+    getAll: async function(){ return JSON.parse(JSON.stringify(state)); },
+    saveProgress: async function(entry){ state.progress.push(entry); saveAll(state); },
+    replaceAll: async function(newState){ state = newState; saveAll(state); },
+    clearAll: async function(){ state = {tasks:[],progress:[],prefs:{mode:'Normal',notify:false},undo:[]}; saveAll(state); }
+  };
+
+  // NotificationAdapter (browser)
+  const NotificationAdapter = {
+    scheduleReminder: async function(taskId, whenISO){
+      // Simple: for demo we won't use real scheduling; we store reminders in state as progress entries at due time.
+      // For demo, if 'when' is now-ish we call notifyNow.
+      console.log('scheduleReminder',taskId,whenISO);
+      return 'rem_'+Math.random().toString(36).slice(2,8);
+    },
+    cancelReminder: async function(id){ console.log('cancel',id); },
+    notifyNow: async function(payload){
+      if(state.prefs.notify && "Notification" in window){
+        if(Notification.permission!=='granted'){
+          Notification.requestPermission();
+        } else {
+          new Notification(payload.title || 'SoloDev', {body: payload.body||'', tag: payload.tag||'solo'});
+        }
+      }
+      // also show in-app toast
+      ui.showToast(payload.title + ' — ' + (payload.body||''));
+    }
+  };
+
+  // ClockAdapter
+  const ClockAdapter = {
+    now: function(){ return new Date(); },
+    schedule: function(cb,whenDate){
+      const ms = new Date(whenDate) - new Date();
+      if(ms<=0) setTimeout(cb,1000); else setTimeout(cb,ms);
+      return {cancel:()=>{}}
+    }
+  };
+
+  // Undo stack adapter
+  function pushUndo(snapshot){
+    state.undo = state.undo || [];
+    state.undo.push({time:new Date().toISOString(), snapshot});
+    if(state.undo.length>20) state.undo.shift();
+    saveAll(state);
+  }
+
+  function popUndo(){
+    state.undo = state.undo || [];
+    const item = state.undo.pop();
+    saveAll(state);
+    return item;
+  }
+
+  return {PersistenceAdapter, NotificationAdapter, ClockAdapter, getState:()=>state, pushUndo, popUndo};
+})();
+
+/* =========================
+   USE CASES / INTERACTORS
+   Business rules implemented here
+   Dependencies are adapters (ports)
+   ========================= */
+const usecases = (function(domain, adapters){
+  const {Task, ProgressEntry} = domain;
+  const P = adapters.PersistenceAdapter;
+  const N = adapters.NotificationAdapter;
+  const C = adapters.ClockAdapter;
+
+  async function capture(rawText, opts={toVault:false}){
+    // parse quick modifiers: project:NAME due:tomorrow est:45
+    const parsed = parseQuick(rawText);
+    const t = new Task({
+      title: parsed.text,
+      project: parsed.project || null,
+      reason: parsed.reason || '',
+      estimate: parsed.estimate || 30,
+      status: opts.toVault ? 'vault' : 'inbox',
+      due: parsed.due || null
+    });
+    // push undo snapshot
+    adapters.pushUndo(await P.getAll());
+    await P.saveTask(t);
+    // optional urgent reminder if word "urgent" present
+    if(parsed.urgent){
+      await N.notifyNow({title:'Urgent captured', body:t.title, tag:'urgent'});
+    }
+    return t;
+  }
+
+  async function getInbox(){ return P.queryTasks({status:'inbox'}) }
+  async function getVault(){ return P.queryTasks({status:'vault'}) }
+  async function getToday(){ return P.queryTasks({status:'today'}) }
+  async function getAllTasks(){ return P.getAll().then(s=>s.tasks) }
+
+  async function moveToToday(taskId){
+    const task = await P.getTask(taskId);
+    if(!task) return null;
+    // capacity guard handled externally
+    adapters.pushUndo(await P.getAll());
+    task.status = 'today';
+    await P.saveTask(task);
+    return task;
+  }
+
+  async function markDone(taskId, confirmAutomated=false){
+    const task = await P.getTask(taskId);
+    if(!task) return null;
+    if(task.automated && !confirmAutomated) {
+      // require confirmation - return special code
+      return {error:'automated_needs_confirm'};
+    }
+    adapters.pushUndo(await P.getAll());
+    task.markDone();
+    await P.saveTask(task);
+    const entry = new ProgressEntry({taskId:task.id, summary:task.title});
+    await P.saveProgress(entry);
+    return task;
+  }
+
+  async function archiveTask(taskId){
+    const task = await P.getTask(taskId);
+    if(!task) return null;
+    adapters.pushUndo(await P.getAll());
+    task.archive();
+    await P.saveTask(task);
+    return task;
+  }
+
+  async function softDelete(taskId){
+    const task = await P.getTask(taskId);
+    if(!task) return null;
+    adapters.pushUndo(await P.getAll());
+    task.softDelete();
+    await P.saveTask(task);
+    return task;
+  }
+
+  async function setMode(mode){
+    const s = await P.getAll();
+    s.prefs = s.prefs || {};
+    s.prefs.mode = mode;
+    adapters.pushUndo(await P.getAll());
+    await P.replaceAll(s);
+  }
+
+  async function toggleNotify(val){
+    const s = await P.getAll();
+    s.prefs = s.prefs || {};
+    s.prefs.notify = !!val;
+    adapters.pushUndo(await P.getAll());
+    await P.replaceAll(s);
+  }
+
+  async function computeCapacity(){
+    // naive: last 7 days progress entries -> count of tasks done -> capacity minutes = avg*60?
+    const s = await P.getAll();
+    const days = 7;
+    const now = new Date();
+    const cutoff = new Date(now.getTime() - days*24*3600*1000);
+    const recent = s.progress.filter(p => new Date(p.createdAt) >= cutoff);
+    // count done per day
+    const byDay = {};
+    for(const r of recent){
+      const d = new Date(r.createdAt).toISOString().slice(0,10);
+      byDay[d] = (byDay[d]||0)+1;
+    }
+    const sum = Object.values(byDay).reduce((a,b)=>a+b,0);
+    const avg = (Object.keys(byDay).length>0) ? sum / Object.keys(byDay).length : 1;
+    // convert to a soft capacity number of tasks: clamp 1..8
+    const capacityTasks = Math.min(8, Math.max(1, Math.round(avg || 2)));
+    return capacityTasks;
+  }
+
+  async function planWeekPlaceTask(dayKey, taskId){
+    // simple: mark task with due date = dayKey
+    const task = await P.getTask(taskId);
+    if(!task) return null;
+    adapters.pushUndo(await P.getAll());
+    task.due = dayKey;
+    await P.saveTask(task);
+    return task;
+  }
+
+  async function getWeeklyPlan(){
+    const s = await P.getAll();
+    const tasks = s.tasks.filter(t=>t.due);
+    // group by day
+    const map = {};
+    for(const t of tasks){
+      map[t.due] = map[t.due] || [];
+      map[t.due].push(t);
+    }
+    return map;
+  }
+
+  async function undo(){
+    const item = adapters.popUndo();
+    if(!item) return null;
+    // item.snapshot is state
+    await adapters.PersistenceAdapter.replaceAll(item.snapshot);
+    return true;
+  }
+
+  // helper parse quick
+  function parseQuick(text){
+    const res = {text, project:null, reason:'', estimate:30, due:null, urgent:false};
+    // project:NAME
+    const proj = text.match(/project:([^\s]+)/i);
+    if(proj) { res.project = proj[1]; res.text = res.text.replace(proj[0],'').trim(); }
+    const due = text.match(/due:([^\s]+)/i);
+    if(due){
+      const d = due[1].toLowerCase();
+      let when = null;
+      if(d==='tomorrow') when = new Date(Date.now()+24*3600*1000);
+      else if(d==='today') when = new Date();
+      else when = new Date(d);
+      if(when) res.due = when.toISOString().slice(0,10);
+      res.text = res.text.replace(due[0],'').trim();
+    }
+    const est = text.match(/est:([0-9]+)/i);
+    if(est){ res.estimate = parseInt(est[1],10); res.text = res.text.replace(est[0],'').trim(); }
+    if(/urgent/i.test(text)) res.urgent = true;
+    return res;
+  }
+
+  return {
+    capture, getInbox, getVault, getToday, moveToToday, markDone,
+    archiveTask, softDelete, setMode, toggleNotify, computeCapacity,
+    planWeekPlaceTask, getWeeklyPlan, getAllTasks, undo
+  };
+})(domain, adapters);
+
+/* =========================
+   PRESENTERS / UI HELPERS
+   Convert usecase outputs to DOM
+   ========================= */
+const ui = (function(domain, usecases, adapters){
+  // small in-app toast
+  const toastEl = document.createElement('div');
+  toastEl.style.position='fixed';toastEl.style.right='18px';toastEl.style.bottom='18px';
+  toastEl.style.padding='12px';toastEl.style.border='4px solid var(--fg)';toastEl.style.background='#fff';
+  toastEl.style.fontFamily='var(--mono)';toastEl.style.fontWeight='800';toastEl.style.zIndex=9999;
+  toastEl.className='hidden';
+  document.body.appendChild(toastEl);
+  function showToast(txt,ttl=2500){
+    toastEl.textContent=txt; toastEl.classList.remove('hidden');
+    setTimeout(()=>toastEl.classList.add('hidden'), ttl);
+  }
+
+  async function renderInbox(){
+    const list = await usecases.getInbox();
+    const el = document.getElementById('inboxList');
+    el.innerHTML = '';
+    if(!list.length){ el.innerHTML = '<div class="small-muted">Inbox empty — capture quick.</div>'; return; }
+    for(const t of list){
+      const wrap = document.createElement('div'); wrap.className='task';
+      wrap.innerHTML = `<div style="flex:1"><div class="title">${escapeHtml(t.title)}</div><div class="meta">${t.project?'<span class="tag">'+escapeHtml(t.project)+'</span>':''} ${t.due?'<span class="small-muted">due:'+t.due+'</span>':''}</div></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="btn" data-action="today" data-id="${t.id}">Today</button>
+          <button class="btn" data-action="vault" data-id="${t.id}">Vault</button>
+          <button class="btn" data-action="archive" data-id="${t.id}">Archive</button>
+        </div>`;
+      el.appendChild(wrap);
+    }
+  }
+
+  async function renderVault(){
+    const list = await usecases.getVault();
+    const el = document.getElementById('vaultList');
+    el.innerHTML = '';
+    if(!list.length){ el.innerHTML = '<div class="small-muted">Vault is calm.</div>'; return; }
+    for(const t of list){
+      const wrap = document.createElement('div'); wrap.className='idea-item';
+      wrap.innerHTML = `<div><div class="title">${escapeHtml(t.title)}</div><div class="small-muted">${t.project?'<span class="tag">'+escapeHtml(t.project)+'</span>':''}</div></div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="btn" data-action="promote" data-id="${t.id}">Promote → Inbox</button>
+          <button class="btn" data-action="delete" data-id="${t.id}">Delete</button>
+        </div>`;
+      el.appendChild(wrap);
+    }
+  }
+
+  async function renderToday(){
+    const capacity = await usecases.computeCapacity();
+    document.getElementById('activeLimit').textContent = capacity;
+    document.getElementById('capacityText').textContent = capacity + ' tasks (computed)';
+    const fill = Math.min(100, (capacity/8)*100);
+    document.getElementById('capacityFill').style.width = `${fill}%`;
+    const list = await usecases.getToday();
+    const el = document.getElementById('todayList');
+    el.innerHTML='';
+    if(!list.length){
+      el.innerHTML = '<div class="small-muted">Today is empty — pick from Inbox or plan week.</div>';
+      return;
+    }
+    const s = adapters.getState();
+    const mode = s.prefs && s.prefs.mode ? s.prefs.mode : 'Normal';
+    let visible = list;
+    if(mode==='Focus' && list.length>1) visible = [list[0]];
+    for(const t of visible){
+      const wrap = document.createElement('div'); wrap.className='task';
+      wrap.innerHTML = `<div style="flex:1">
+          <div class="title">${escapeHtml(t.title)}</div>
+          <div class="meta">${t.project?'<span class="tag">'+escapeHtml(t.project)+'</span>':''} ${t.estimate? '<span class="small-muted">est:'+t.estimate+'m</span>':''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="btn" data-action="done" data-id="${t.id}">Done</button>
+          <button class="btn" data-action="pause" data-id="${t.id}">Pause</button>
+          <button class="btn" data-action="archive" data-id="${t.id}">Archive</button>
+        </div>`;
+      el.appendChild(wrap);
+    }
+  }
+
+  async function renderWeek(){
+    const plan = await usecases.getWeeklyPlan();
+    const days = getNext7Days();
+    const grid = document.getElementById('weekGrid');
+    grid.innerHTML = '';
+    for(const d of days){
+      const dayWrap = document.createElement('div');
+      dayWrap.className='panel';
+      dayWrap.style.border='4px dashed rgba(0,0,0,0.06)';
+      dayWrap.style.minHeight='80px';
+      dayWrap.innerHTML = `<div class="small-muted">${d.display}</div><div style="font-weight:900">${d.key}</div><div id="day_${d.key}" style="margin-top:8px"></div>
+        <div style="margin-top:8px"><input id="add_${d.key}" placeholder="task id to schedule" style="width:100%;padding:6px;border:3px solid var(--fg);font-family:var(--mono)"/></div>`;
+      grid.appendChild(dayWrap);
+      const listWrap = dayWrap.querySelector(`#day_${d.key}`);
+      const tasks = plan[d.key]||[];
+      if(!tasks.length) listWrap.innerHTML = '<div class="small-muted">no tasks</div>';
+      else tasks.forEach(t=>{
+        const it = document.createElement('div'); it.className='small-muted progress-entry';
+        it.textContent = t.title;
+        listWrap.appendChild(it);
+      });
+      // bind add
+      const input = dayWrap.querySelector(`#add_${d.key}`);
+      input.addEventListener('keydown', async (e)=>{
+        if(e.key==='Enter'){
+          const val = input.value.trim();
+          if(!val){ showToast('enter a task id from inbox/today'); return; }
+          await usecases.planWeekPlaceTask(d.key, val);
+          renderAll();
+        }
+      });
+    }
+  }
+
+  async function renderProgress(){
+    const s = adapters.getState();
+    const out = document.getElementById('progressLog');
+    out.innerHTML = '';
+    if(!s.progress || !s.progress.length){ out.innerHTML = '<div class="small-muted">No progress yet.</div>'; return; }
+    const recent = s.progress.slice(-20).reverse();
+    for(const p of recent){
+      const el = document.createElement('div'); el.className='progress-entry';
+      const t = (s.tasks.find(x=>x.id===p.taskId) || {title:'(deleted)'});
+      el.innerHTML = `<div style="font-weight:900">${escapeHtml(t.title)}</div><div class="small-muted">${new Date(p.createdAt).toLocaleString()}</div>`;
+      out.appendChild(el);
+    }
+  }
+
+  async function renderAll(){
+    await renderInbox();
+    await renderVault();
+    await renderToday();
+    await renderWeek();
+    await renderProgress();
+    document.getElementById('undoCount').textContent = (adapters.getState().undo||[]).length;
+    const mode = adapters.getState().prefs && adapters.getState().prefs.mode || 'Normal';
+    document.getElementById('modeDisplay').textContent = 'Mode: ' + mode;
+  }
+
+  // small helpers
+  function escapeHtml(s=''){ return (''+s).replace(/[&<>"']/g, c=>({ '&': '&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function getNext7Days(){
+    const out=[];
+    const now = new Date();
+    for(let i=0;i<7;i++){
+      const d = new Date(now.getTime() + i*24*3600*1000);
+      const key = d.toISOString().slice(0,10);
+      out.push({date:d,key,display:d.toLocaleDateString()});
+    }
+    return out;
+  }
+
+  return {showToast, renderAll, renderInbox, renderVault, renderToday, renderWeek, renderProgress};
+})(domain, usecases, adapters);
+
+/* =========================
+   UI BINDING / INPUTS
+   Buttons, hotkeys, event handlers
+   ========================= */
+(function(domain, usecases, ui, adapters){
+  // bind capture
+  document.getElementById('captureBtn').addEventListener('click', async ()=>{
+    const txt = document.getElementById('captureText').value.trim();
+    if(!txt) { ui.showToast('empty'); return; }
+    await usecases.capture(txt, {toVault:false});
+    document.getElementById('captureText').value='';
+    await ui.renderAll();
+    ui.showToast('captured to Inbox');
+  });
+  document.getElementById('captureIdeaBtn').addEventListener('click', async ()=>{
+    const txt = document.getElementById('captureText').value.trim();
+    if(!txt) { ui.showToast('empty'); return; }
+    await usecases.capture(txt, {toVault:true});
+    document.getElementById('captureText').value='';
+    await ui.renderAll();
+    ui.showToast('stored in Idea Vault');
+  });
+
+  // voice capture - simple speech recognition if available
+  document.getElementById('captureVoiceBtn').addEventListener('click', async ()=>{
+    if(!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      ui.showToast('speech not supported');
+      return;
+    }
+    ui.showToast('listening... speak now');
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const r = new SR(); r.lang='en-US'; r.interimResults=false; r.maxAlternatives=1;
+    r.onresult = async (ev)=> {
+      const t = ev.results[0][0].transcript;
+      document.getElementById('captureText').value = t;
+      await usecases.capture(t, {toVault:false});
+      document.getElementById('captureText').value='';
+      await ui.renderAll();
+      ui.showToast('captured voice → Inbox');
+    };
+    r.onerror = (e)=> ui.showToast('speech error');
+    r.start();
+  });
+
+  // inbox actions (delegated)
+  document.getElementById('inboxList').addEventListener('click', async (e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    const action = btn.getAttribute('data-action');
+    const id = btn.getAttribute('data-id');
+    if(action==='today'){ 
+      // capacity check
+      const cap = await usecases.computeCapacity();
+      const today = await usecases.getToday();
+      if(today.length >= cap){
+        if(!confirm('Capacity reached — add anyway?')) return;
+      }
+      await usecases.moveToToday(id);
+    } else if(action==='vault'){
+      // move to vault
+      const t = (await adapters.PersistenceAdapter.getTask(id));
+      t.status = 'vault'; adapters.pushUndo(await adapters.PersistenceAdapter.getAll()); await adapters.PersistenceAdapter.saveTask(t);
+    } else if(action==='archive'){
+      await usecases.archiveTask(id);
+    }
+    await ui.renderAll();
+  });
+
+  // vault actions
+  document.getElementById('vaultList').addEventListener('click', async (e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    const action = btn.getAttribute('data-action');
+    const id = btn.getAttribute('data-id');
+    if(action==='promote'){
+      const t = await adapters.PersistenceAdapter.getTask(id);
+      t.status = 'inbox';
+      adapters.pushUndo(await adapters.PersistenceAdapter.getAll());
+      await adapters.PersistenceAdapter.saveTask(t);
+      ui.showToast('promoted to Inbox');
+    } else if(action==='delete'){
+      if(!confirm('Delete idea permanently?')) return;
+      await usecases.softDelete(id);
+    }
+    await ui.renderAll();
+  });
+
+  // today actions
+  document.getElementById('todayList').addEventListener('click', async (e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    const action = btn.getAttribute('data-action');
+    const id = btn.getAttribute('data-id');
+    if(action==='done'){
+      const res = await usecases.markDone(id);
+      if(res && res.error==='automated_needs_confirm'){
+        if(!confirm('This was marked automated. Confirm done?')) { ui.showToast('not confirmed'); return; }
+        await usecases.markDone(id, true);
+      }
+    } else if(action==='pause'){
+      const t = await adapters.PersistenceAdapter.getTask(id);
+      adapters.pushUndo(await adapters.PersistenceAdapter.getAll());
+      t.status = 'paused';
+      await adapters.PersistenceAdapter.saveTask(t);
+      ui.showToast('task paused');
+    } else if(action==='archive'){
+      await usecases.archiveTask(id);
+    }
+    await ui.renderAll();
+  });
+
+  // mode buttons
+  document.getElementById('focusBtn').addEventListener('click', async ()=>{ await usecases.setMode('Focus'); ui.renderAll(); });
+  document.getElementById('chaosBtn').addEventListener('click', async ()=>{ await usecases.setMode('Chaos'); ui.renderAll(); });
+  document.getElementById('normalBtn').addEventListener('click', async ()=>{ await usecases.setMode('Normal'); ui.renderAll(); });
+
+  // pause button
+  document.getElementById('pauseBtn').addEventListener('click', async ()=>{
+    // enter pause mode: hide all except one smallest task
+    const s = adapters.getState();
+    const paused = s.prefs && s.prefs.mode==='Pause';
+    if(!paused){
+      await usecases.setMode('Pause');
+      // move all today to paused except one
+      const today = await usecases.getToday();
+      if(today.length>1){
+        adapters.pushUndo(await adapters.PersistenceAdapter.getAll());
+        for(let i=1;i<today.length;i++){
+          const t = today[i]; t.status='paused'; await adapters.PersistenceAdapter.saveTask(t);
+        }
+      }
+      ui.showToast('Pause Mode ON');
+    } else {
+      await usecases.setMode('Normal');
+      ui.showToast('Pause Mode OFF');
+    }
+    ui.renderAll();
+  });
+
+  // undo
+  document.getElementById('undoBtn').addEventListener('click', async ()=>{
+    await usecases.undo();
+    ui.renderAll();
+    ui.showToast('undone');
+  });
+
+  // shortcuts
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='c'){ document.getElementById('captureText').focus(); }
+    if(e.key==='t'){ /* open today - focus */ document.getElementById('captureText').blur(); document.getElementById('todayList').scrollIntoView(); }
+    if(e.key==='v'){ document.getElementById('vaultList').scrollIntoView(); }
+  });
+
+  // notifications toggle
+  document.getElementById('notifyToggle').addEventListener('change', async (e)=>{
+    await usecases.toggleNotify(e.target.checked);
+    ui.showToast('notifications updated');
+  });
+
+  // rage catcher
+  document.getElementById('softDeleteBtn').addEventListener('click', async ()=>{
+    const txt = document.getElementById('rageInput').value.trim();
+    if(!txt) { ui.showToast('write something or cancel'); return; }
+    // create a hidden progress entry and soft-delete all paused tasks (demo)
+    const s = adapters.getState();
+    const paused = s.tasks.filter(t=>t.status==='paused');
+    for(const p of paused){ await usecases.softDelete(p.id); }
+    document.getElementById('rageInput').value='';
+    document.getElementById('rageBox').classList.add('hidden');
+    ui.showToast('soft-deleted paused tasks (safe)');
+    ui.renderAll();
+  });
+  document.getElementById('ventBtn').addEventListener('click', async ()=>{
+    const txt = document.getElementById('rageInput').value.trim();
+    if(!txt) { ui.showToast('vent is empty'); return; }
+    // record as progress note and pause system
+    adapters.pushUndo(await adapters.PersistenceAdapter.getAll());
+    await adapters.PersistenceAdapter.saveProgress({id:'note_'+Math.random().toString(36).slice(2,8),taskId:null,summary:'VENT: '+txt,createdAt:new Date().toISOString()});
+    await usecases.setMode('Pause');
+    document.getElementById('rageInput').value='';
+    document.getElementById('rageBox').classList.add('hidden');
+    ui.showToast('vented and paused');
+    ui.renderAll();
+  });
+
+  // export / reset
+  document.getElementById('exportBtn').addEventListener('click', async ()=>{
+    const s = await adapters.PersistenceAdapter.getAll();
+    const data = JSON.stringify(s, null, 2);
+    const blob = new Blob([data], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='solo_export.json'; a.click(); URL.revokeObjectURL(url);
+  });
+  document.getElementById('resetBtn').addEventListener('click', async ()=>{
+    if(!confirm('reset all local data?')) return;
+    await adapters.PersistenceAdapter.clearAll();
+    ui.renderAll();
+  });
+
+  // show/hide rage box when delete heavy actions might happen
+  document.getElementById('inboxPanel').addEventListener('dblclick', ()=>{ document.getElementById('rageBox').classList.toggle('hidden'); });
+
+  // undo count display updated in renderAll
+
+})(domain, usecases, ui, adapters);
+
+/* =========================
+   APP INITIALIZATION
+   Seed data, initial render, onboarding hints
+   ========================= */
+(async function(){
+  // seed sample tasks if empty
+  const s = adapters.getState();
+  if(!s.tasks || s.tasks.length===0){
+    const t1 = new domain.Task({title:'Fix newsletter signup', project:'website', estimate:45, status:'inbox'});
+    const t2 = new domain.Task({title:'Ship v1.2 changes', project:'app', estimate:120, status:'today'});
+    const t3 = new domain.Task({title:'Write marketing email', project:'marketing', estimate:60, status:'vault'});
+    await adapters.PersistenceAdapter.saveTask(t1);
+    await adapters.PersistenceAdapter.saveTask(t2);
+    await adapters.PersistenceAdapter.saveTask(t3);
+  }
+  // ensure prefs
+  const fullState = adapters.getState();
+  if(!fullState.prefs) fullState.prefs={mode:'Normal',notify:false};
+  // set UI toggles
+  document.getElementById('notifyToggle').checked = !!fullState.prefs.notify;
+  // initial render
+  await ui.renderAll();
+  // initial toast
+  ui.showToast('Solo Brutalist ready — capture with c');
+})();
+
+/* =========================
+   SMALL UTILS (end)
+   ========================= */
+function showToast(t){ /* fallback */ console.log(t); }
+</script>
+</body>
+</html>
