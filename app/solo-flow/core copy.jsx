@@ -231,7 +231,7 @@ export function Core() {
 
         <div className="border-b border-gray-700 mb-8">
           <nav className="flex flex-wrap space-x-1 sm:space-x-2">
-            {["inbox", "today", "paused", "done", "spaces"].map((view) => (
+            {["inbox", "today", "paused", "done", "spaces", "more"].map((view) => (
               <button
                 key={view}
                 onClick={() => setCurrentView(view)}

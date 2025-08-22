@@ -161,7 +161,7 @@ export default function App() {
                 #notification-toast.show { opacity: 1; pointer-events: auto; }
             `}</style>
       <header className="text-center mb-10">
-        <h1 className="text-4xl font-bold tracking-tight">Solo-Flow</h1>
+        <h1 className="text-4xl font-bold tracking-tight">Solo-Leveling</h1>
         {/* <h1 className="text-4xl font-bold tracking-tight">Day2Day</h1> */}
 
         <p className="mt-2 text-lg text-gray-400">
@@ -182,22 +182,24 @@ export default function App() {
 
         <div className="border-b border-gray-700 mb-8">
           <nav className="flex flex-wrap space-x-1 sm:space-x-2">
-            {["inbox", "today", "paused", "done", "spaces"].map((view) => (
-              <button
-                key={view}
-                onClick={() => setCurrentView(view)}
-                className={`nav-btn py-2 px-4 font-medium border-b-2 ${
-                  currentView === view
-                    ? "text-orange-500 border-orange-500"
-                    : "text-gray-400 border-transparent hover:text-white"
-                }`}
-              >
-                {view.charAt(0).toUpperCase() + view.slice(1)}
-                {view === "inbox" &&
-                  parseInt(counts.inbox?.split(":")?.[1]?.trim() ?? 0) >
-                    INBOX_OVERLOADED && <span className="mt-1"> 🔥 </span>}
-              </button>
-            ))}
+            {["inbox", "today", "paused", "done", "spaces", "more"].map(
+              (view) => (
+                <button
+                  key={view}
+                  onClick={() => setCurrentView(view)}
+                  className={`nav-btn py-2 px-4 font-medium border-b-2 ${
+                    currentView === view
+                      ? "text-orange-500 border-orange-500"
+                      : "text-gray-400 border-transparent hover:text-white"
+                  }`}
+                >
+                  {view.charAt(0).toUpperCase() + view.slice(1)}
+                  {view === "inbox" &&
+                    parseInt(counts.inbox?.split(":")?.[1]?.trim() ?? 0) >
+                      INBOX_OVERLOADED && <span className="mt-1"> 🔥 </span>}
+                </button>
+              )
+            )}
           </nav>
           <div className="mt-2 text-sm text-gray-500 flex flex-wrap gap-x-4">
             <span>{counts.inbox}</span>
@@ -226,7 +228,7 @@ export default function App() {
               handleSpaceChange={handleSpaceChange}
             />
           )}
-          {["inbox", "today", "paused", "done"].map((view) => (
+          {["inbox", "today", "paused", "done", "more"].map((view) => (
             <div
               key={view}
               className={`view ${currentView === view ? "" : "hidden"}`}
