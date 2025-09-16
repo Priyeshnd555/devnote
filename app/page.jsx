@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { createAppUseCases } from "./(src)/components/clean-architecture/core/useCases";
-import { Spaces } from "../../app/solo-flow-clean/(src)/components/clean-architecture/components/Spaces";
-import { TaskItem } from "../../app/solo-flow-clean/(src)/components/clean-architecture/components/TaskItem";
-import { SettingsFactory } from "./(src)/components/clean-architecture/core/entities";
+import { createAppUseCases } from "./components/clean-architecture/core/useCases";
+import { Spaces } from "./components/clean-architecture/components/Spaces";
+import { TaskItem } from "./components/clean-architecture/components/TaskItem";
+import { SettingsFactory } from "./components/clean-architecture/core/entities";
 
 const INBOX_OVERLOADED = 8;
 
