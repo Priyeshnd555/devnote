@@ -4,13 +4,12 @@
   "homepage": "https://Priyeshnd555.github.io/devnote/",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build && next export",
-    "postexport": "echo > out/.nojekyll",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d out"
+    "deploy": "gh-pages -d out --nojekyll"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
