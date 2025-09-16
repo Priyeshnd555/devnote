@@ -4,6 +4,8 @@
  */
 const nextConfig = {
   output: "export",
+  basePath: "/devnote",
+  // assetPrefix: "/repo-name/",
 
   // Optional settings:
   // trailingSlash: true,        // generates /page/index.html
