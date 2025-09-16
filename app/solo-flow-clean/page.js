@@ -161,11 +161,11 @@ export default function App() {
                 #notification-toast.show { opacity: 1; pointer-events: auto; }
             `}</style>
       <header className="text-center mb-10">
-        <h1 className="text-4xl font-bold tracking-tight">Solo-Leveling</h1>
+        <h1 className="text-4xl font-bold tracking-tight">DevNote</h1>
         {/* <h1 className="text-4xl font-bold tracking-tight">Day2Day</h1> */}
 
         <p className="mt-2 text-lg text-gray-400">
-          Your co-pilot for focused, sustainable development.
+          Notetaker with Just enough structure.
         </p>
       </header>
 
