@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "devnote",
+  title: "Devnote",
   description: "Notetaker with Just enough structure.",
 };
 
