@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createAppUseCases } from "./components/clean-architecture/core/useCases";
-import { Spaces } from "./components/clean-architecture/components/Spaces";
+import { createAuthUseCases } from "./components/clean-architecture/core/authUseCases";
 import { TaskItem } from "./components/clean-architecture/components/TaskItem";
+import { Spaces } from "./components/clean-architecture/components/Spaces";
 import { SettingsFactory } from "./components/clean-architecture/core/entities";
+import SignUpModal from "./components/clean-architecture/components/SignUpModal";
+import SignInModal from "./components/clean-architecture/components/SignInModal";
+import AuthPage from "./components/clean-architecture/components/AuthPage";
 
 const INBOX_OVERLOADED = 8;
 
@@ -18,25 +22,29 @@ export default function App() {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [action, setAction] = useState("");
   const [notification, setNotification] = useState("");
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   // --- ARCHITECTURE SETUP ---
-  // useMemo ensures these are created only once.
-  const { useCases } = useMemo(() => {
-    const appUseCases = createAppUseCases();
-    return {
-      useCases: appUseCases,
-    };
-  }, []);
+  const authUseCases = useMemo(() => createAuthUseCases(), []);
+  const appUseCases = useMemo(() => {
+    const userId = currentUser ? currentUser.id : "anonymous";
+    return createAppUseCases(userId);
+  }, [currentUser]);
 
   // --- EFFECTS ---
-  // Load initial data on mount
   useEffect(() => {
-    const { tasks, settings } = useCases.getInitialState();
-    setTasks(tasks);
-    setSettings(settings);
-  }, [useCases]);
+    const { user } = authUseCases.getCurrentUser();
+    setCurrentUser(user);
+  }, [authUseCases]);
 
-  // Show notification and clear it after a delay
+  useEffect(() => {
+    const initialState = appUseCases.getInitialState();
+    setTasks(initialState.tasks);
+    setSettings(initialState.settings);
+  }, [appUseCases]);
+
   useEffect(() => {
     if (notification) {
       const timer = setTimeout(() => setNotification(""), 3000);
@@ -48,7 +56,7 @@ export default function App() {
   const handleTaskSubmit = (e) => {
     e.preventDefault();
     const description = e.target[0].value.trim();
-    const result = useCases.addTask(description);
+    const result = appUseCases.addTask(description);
     if (result.success) {
       setTasks(result.tasks);
       e.target[0].value = "";
@@ -63,8 +71,8 @@ export default function App() {
     } else {
       const result =
         actionType === "today"
-          ? useCases.moveTaskToToday(taskId)
-          : useCases.resumeTask(taskId);
+          ? appUseCases.moveTaskToToday(taskId)
+          : appUseCases.resumeTask(taskId);
       if (result.success) {
         setTasks(result.tasks);
         setCurrentView("today");
@@ -77,7 +85,7 @@ export default function App() {
     e.preventDefault();
     const context = e.target.elements["pause-context"].value;
     const resumeDate = e.target.elements["resume-date"].value;
-    const result = useCases.pauseTask(editingTaskId, { context, resumeDate });
+    const result = appUseCases.pauseTask(editingTaskId, { context, resumeDate });
     if (result.success) {
       setTasks(result.tasks);
       setEditingTaskId(null);
@@ -89,7 +97,7 @@ export default function App() {
   const handleDoneSubmit = (e) => {
     e.preventDefault();
     const remarks = e.target.elements["done-remarks"].value;
-    const result = useCases.completeTask(editingTaskId, { remarks });
+    const result = appUseCases.completeTask(editingTaskId, { remarks });
     if (result.success) {
       setTasks(result.tasks);
       setEditingTaskId(null);
@@ -99,7 +107,7 @@ export default function App() {
   };
 
   const handleEditField = (taskId, field, value) => {
-    const result = useCases.updateTaskField(taskId, field, value);
+    const result = appUseCases.updateTaskField(taskId, field, value);
     if (result.success) setTasks(result.tasks);
     setNotification(
       `${field.charAt(0).toUpperCase() + field.slice(1)} updated.`
@@ -107,7 +115,7 @@ export default function App() {
   };
 
   const handleAddUpdate = (taskId, updateText) => {
-    const result = useCases.addTaskUpdate(taskId, updateText);
+    const result = appUseCases.addTaskUpdate(taskId, updateText);
     if (result.success) {
       setTasks(result.tasks);
       setNotification("Update added.");
@@ -119,8 +127,7 @@ export default function App() {
   };
 
   const handleSpaceChange = (newSpace) => {
-    const result = useCases.setSpace(newSpace);
-    console.log("=======space change");
+    const result = appUseCases.setSpace(newSpace);
     if (result.success) {
       setSettings(result.settings);
       setTasks(result.tasks); // Reload tasks for the new space
@@ -129,7 +136,55 @@ export default function App() {
     }
   };
 
+  const handleSignUp = (email, password) => {
+    const { success, user, error } = authUseCases.signUp(email, password);
+    if (success) {
+      setCurrentUser(user);
+      setIsSignUpModalOpen(false);
+    } else {
+      alert(error);
+    }
+  };
+
+  const handleSignIn = (email, password) => {
+    const { success, user, error } = authUseCases.signIn(email, password);
+    if (success) {
+      setCurrentUser(user);
+      setIsSignInModalOpen(false);
+    } else {
+      alert(error);
+    }
+  };
+
+  const handleSignOut = () => {
+    const { success } = authUseCases.signOut();
+    if (success) {
+      setCurrentUser(null);
+    }
+  };
+
   // --- DERIVED STATE & RENDERING LOGIC ---
+  if (!currentUser) {
+    return (
+      <>
+        <AuthPage
+          onSignInClick={() => setIsSignInModalOpen(true)}
+          onSignUpClick={() => setIsSignUpModalOpen(true)}
+        />
+        <SignUpModal
+          open={isSignUpModalOpen}
+          onOpenChange={setIsSignUpModalOpen}
+          onSignUp={handleSignUp}
+        />
+        <SignInModal
+          open={isSignInModalOpen}
+          onOpenChange={setIsSignInModalOpen}
+          onSignIn={handleSignIn}
+        />
+      </>
+    );
+  }
+
   const tasksToRender = activeFilterProject
     ? tasks.filter((task) => task.projectId === activeFilterProject)
     : tasks;
@@ -162,11 +217,9 @@ export default function App() {
             `}</style>
       <header className="text-center mb-10">
         <h1 className="text-4xl font-bold tracking-tight">DevNote</h1>
-        {/* <h1 className="text-4xl font-bold tracking-tight">Day2Day</h1> */}
-
-        <p className="mt-2 text-lg text-gray-400">
-          Notetaker with Just enough structure.
-        </p>
+        {currentUser && (
+          <p className="mt-2 text-lg text-gray-400">{currentUser.email}</p>
+        )}
       </header>
 
       <main>
@@ -228,7 +281,20 @@ export default function App() {
               handleSpaceChange={handleSpaceChange}
             />
           )}
-          {["inbox", "today", "paused", "done", "more"].map((view) => (
+          {currentView === "more" && (
+            <div className="view">
+              <h2 className="text-2xl font-semibold text-white mb-4">More</h2>
+              <div className="space-y-4">
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left p-2 hover:bg-gray-800 rounded-md"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
+          {["inbox", "today", "paused", "done"].map((view) => (
             <div
               key={view}
               className={`view ${currentView === view ? "" : "hidden"}`}

@@ -29,3 +29,13 @@ export const SettingsFactory = {
     space, // 'Work', 'Personal', 'Project'
   }),
 };
+
+export const UserFactory = {
+  create: ({ email, password }) => ({
+    id: `user_${Date.now()}`,
+    email,
+    // In a real app, we would hash the password. For this example, we'll store it as is.
+    password,
+    createdAt: new Date().toISOString(),
+  }),
+};
