@@ -5,7 +5,7 @@ import { createAppUseCases } from "./components/clean-architecture/core/useCases
 import { createAuthUseCases } from "./components/clean-architecture/core/authUseCases";
 import { TaskItem } from "./components/clean-architecture/components/TaskItem";
 import { Spaces } from "./components/clean-architecture/components/Spaces";
-import { SettingsFactory } from "./components/clean-architecture/core/entities";
+import { SettingsFactory, Task, Settings, User } from "./components/clean-architecture/core/entities";
 import SignUpModal from "./components/clean-architecture/components/SignUpModal";
 import SignInModal from "./components/clean-architecture/components/SignInModal";
 import AuthPage from "./components/clean-architecture/components/AuthPage";
@@ -21,16 +21,17 @@ const INBOX_OVERLOADED = 8;
 // The main App component, acting as the primary UI driver.
 export default function App() {
   // --- STATE MANAGEMENT ---
-  const [tasks, setTasks] = useState([]);
-  const [settings, setSettings] = useState(SettingsFactory.create());
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [settings, setSettings] = useState<Settings>(SettingsFactory.create());
   const [currentView, setCurrentView] = useState("inbox");
-  const [activeFilterProject, setActiveFilterProject] = useState(null);
-  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [activeFilterProject, setActiveFilterProject] = useState<string | null>(null);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [action, setAction] = useState("");
   const [notification, setNotification] = useState("");
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [dataVersion, setDataVersion] = useState(0);
 
   // --- ARCHITECTURE SETUP ---
   const authUseCases = useMemo(() => createAuthUseCases(), []);
@@ -49,7 +50,7 @@ export default function App() {
     const initialState = appUseCases.getInitialState();
     setTasks(initialState.tasks);
     setSettings(initialState.settings);
-  }, [appUseCases]);
+  }, [appUseCases, dataVersion]);
 
   useEffect(() => {
     if (notification) {
@@ -59,18 +60,18 @@ export default function App() {
   }, [notification]);
 
   // --- EVENT HANDLERS (These call the use cases) ---
-  const handleTaskSubmit = (e) => {
+  const handleTaskSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const description = e.target[0].value.trim();
+    const description = (e.currentTarget.elements[0] as HTMLInputElement).value.trim();
     const result = appUseCases.addTask(description);
     if (result.success) {
-      setTasks(result.tasks);
-      e.target[0].value = "";
+      setTasks(result.tasks || []);
+      (e.currentTarget.elements[0] as HTMLInputElement).value = "";
       setNotification("Task added to Inbox.");
     }
   };
 
-  const handleAction = (taskId, actionType) => {
+  const handleAction = (taskId: string, actionType: string) => {
     setAction(actionType);
     if (actionType === "done" || actionType === "pause") {
       setEditingTaskId(taskId);
@@ -80,50 +81,50 @@ export default function App() {
           ? appUseCases.moveTaskToToday(taskId)
           : appUseCases.resumeTask(taskId);
       if (result.success) {
-        setTasks(result.tasks);
+        setTasks(result.tasks || []);
         setCurrentView("today");
         setNotification(`Task moved to Today.`);
       }
     }
   };
 
-  const handlePauseSubmit = (e) => {
+  const handlePauseSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const context = e.target.elements["pause-context"].value;
-    const resumeDate = e.target.elements["resume-date"].value;
-    const result = appUseCases.pauseTask(editingTaskId, { context, resumeDate });
+    const context = (e.currentTarget.elements.namedItem("pause-context") as HTMLTextAreaElement).value;
+    const resumeDate = (e.currentTarget.elements.namedItem("resume-date") as HTMLInputElement).value;
+    const result = appUseCases.pauseTask(editingTaskId!, { context, resumeDate });
     if (result.success) {
-      setTasks(result.tasks);
+      setTasks(result.tasks || []);
       setEditingTaskId(null);
       setCurrentView("paused");
       setNotification("Task paused.");
     }
   };
 
-  const handleDoneSubmit = (e) => {
+  const handleDoneSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const remarks = e.target.elements["done-remarks"].value;
-    const result = appUseCases.completeTask(editingTaskId, { remarks });
+    const remarks = (e.currentTarget.elements.namedItem("done-remarks") as HTMLTextAreaElement).value;
+    const result = appUseCases.completeTask(editingTaskId!, { remarks });
     if (result.success) {
-      setTasks(result.tasks);
+      setTasks(result.tasks || []);
       setEditingTaskId(null);
       setCurrentView("done");
       setNotification("Task marked as done!");
     }
   };
 
-  const handleEditField = (taskId, field, value) => {
+  const handleEditField = (taskId: string, field: keyof Task, value: any) => {
     const result = appUseCases.updateTaskField(taskId, field, value);
-    if (result.success) setTasks(result.tasks);
+    if (result.success) setTasks(result.tasks || []);
     setNotification(
       `${field.charAt(0).toUpperCase() + field.slice(1)} updated.`
     );
   };
 
-  const handleAddUpdate = (taskId, updateText) => {
+  const handleAddUpdate = (taskId: string, updateText: string) => {
     const result = appUseCases.addTaskUpdate(taskId, updateText);
     if (result.success) {
-      setTasks(result.tasks);
+      setTasks(result.tasks || []);
       setNotification("Update added.");
     }
 
@@ -132,7 +133,7 @@ export default function App() {
     }
   };
 
-  const handleSpaceChange = (newSpace) => {
+  const handleSpaceChange = (newSpace: "Work" | "Personal" | "Project") => {
     const result = appUseCases.setSpace(newSpace);
     if (result.success) {
       setSettings(result.settings);
@@ -142,20 +143,21 @@ export default function App() {
     }
   };
 
-  const handleSignUp = (email, password) => {
+  const handleSignUp = (email: string, password: string) => {
     const { success, user, error } = authUseCases.signUp(email, password);
     if (success) {
-      setCurrentUser(user);
+      setCurrentUser(user!);
       setIsSignUpModalOpen(false);
     } else {
       alert(error);
     }
   };
 
-  const handleSignIn = (email, password) => {
+  const handleSignIn = (email: string, password: string) => {
     const { success, user, error } = authUseCases.signIn(email, password);
     if (success) {
-      setCurrentUser(user);
+      setCurrentUser(user!);
+      setDataVersion((v) => v + 1);
       setIsSignInModalOpen(false);
     } else {
       alert(error);
@@ -194,7 +196,7 @@ export default function App() {
   const tasksToRender = activeFilterProject
     ? tasks.filter((task) => task.projectId === activeFilterProject)
     : tasks;
-  const tasksByStatus = { inbox: [], today: [], paused: [], done: [] };
+  const tasksByStatus: { [key: string]: Task[] } = { inbox: [], today: [], paused: [], done: [] };
   tasksToRender.forEach((task) => {
     if (tasksByStatus[task.status]) tasksByStatus[task.status].push(task);
   });
@@ -209,7 +211,7 @@ export default function App() {
           }`
         : "";
     return acc;
-  }, {});
+  }, {} as { [key: string]: string });
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-900 text-white min-h-screen">
@@ -230,7 +232,7 @@ export default function App() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onSelect={handleSignOut}>Sign Out {currentUser.name} </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleSignOut}>Sign Out {currentUser.email} </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
@@ -260,7 +262,7 @@ export default function App() {
               >
                 {view.charAt(0).toUpperCase() + view.slice(1)}
                 {view === "inbox" &&
-                  parseInt(counts.inbox?.split(":")?.[1]?.trim() ?? 0) >
+                  parseInt(counts.inbox?.split(":")?.[1]?.trim() ?? "0") >
                     INBOX_OVERLOADED && <span className="mt-1"> 🔥 </span>}
               </button>
             ))}
@@ -303,7 +305,7 @@ export default function App() {
                 {view === "paused" && "🚧 Paused"}
                 {view === "done" && "🏁 Progress Log"}
               </h2>
-              {view === "today" && tasksByStatus.today.length > 5 && (
+              {view === "today" && tasksByStatus[view].length > 5 && (
                 <p className="text-sm text-amber-400 bg-amber-900/50 p-2 rounded-md mb-4">
                   A long list can be overwhelming. Consider pausing some tasks
                   to maintain focus.
@@ -315,9 +317,11 @@ export default function App() {
                     .sort(
                       (a, b) =>
                         new Date(
-                          view === "done" ? b.completedAt : b.createdAt
-                        ) -
-                        new Date(view === "done" ? a.completedAt : a.createdAt)
+                          view === "done" ? b.completedAt! : b.createdAt
+                        ).getTime() -
+                        new Date(
+                          view === "done" ? a.completedAt! : a.createdAt
+                        ).getTime()
                     )
                     .map((task) => (
                       <TaskItem
@@ -343,7 +347,7 @@ export default function App() {
                             </p>
                             <textarea
                               name="pause-context"
-                              rows="2"
+                              rows={2}
                               className="w-full bg-gray-900 border border-gray-600 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-orange-500"
                               placeholder="e.g., Blocked by API issue..."
                             ></textarea>
@@ -382,7 +386,7 @@ export default function App() {
                             </p>
                             <textarea
                               id="done-remarks"
-                              rows="2"
+                              rows={2}
                               className="w-full bg-gray-900 border border-gray-600 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-orange-500"
                               placeholder="e.g., Fixed bug, tested successfully..."
                             ></textarea>

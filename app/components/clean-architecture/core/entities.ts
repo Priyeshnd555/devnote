@@ -1,3 +1,27 @@
+export interface Task {
+  id: string;
+  description: string;
+  projectId: string | null;
+  status: "inbox" | "today" | "paused" | "done";
+  details: string;
+  updates: string[];
+  pausedContext: string | null;
+  resumeDate: string | null;
+  doneRemarks: string | null;
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export interface Settings {
+  space: "Work" | "Personal" | "Project";
+}
+
+export interface User {
+  id: string;
+  email: string;
+  password?: string; // Make password optional for security reasons
+  createdAt: string;
+}
 
 // ===================================================================================
 // --- LAYER 1: CORE (ENTITIES & USE CASES) ---
@@ -9,7 +33,7 @@
  * Simple factory functions to create consistent data structures for our core concepts.
  */
 export const TaskFactory = {
-  create: ({ description, projectId = null }) => ({
+  create: ({ description, projectId = null }: { description: string; projectId?: string | null }): Task => ({
     id: `task_${Date.now()}`,
     description,
     projectId,
@@ -25,13 +49,13 @@ export const TaskFactory = {
 };
 
 export const SettingsFactory = {
-  create: ({ space = "Work" } = {}) => ({
+  create: ({ space = "Work" }: { space?: "Work" | "Personal" | "Project" } = {}): Settings => ({
     space, // 'Work', 'Personal', 'Project'
   }),
 };
 
 export const UserFactory = {
-  create: ({ email, password }) => ({
+  create: ({ email, password }: Omit<User, "id" | "createdAt">): User => ({
     id: `user_${Date.now()}`,
     email,
     // In a real app, we would hash the password. For this example, we'll store it as is.

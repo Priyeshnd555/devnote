@@ -3,7 +3,7 @@ import {
   createAuthRepository,
   createLocalStorageRepository,
 } from "../adapters/repositories";
-import { UserFactory } from "./entities";
+import { UserFactory, User } from "./entities";
 
 /**
  * --- AUTH USE CASES ---
@@ -15,7 +15,7 @@ const authRepo = createAuthRepository();
 
 export const createAuthUseCases = () => ({
   // Signs up a new user.
-  signUp: (email, password) => {
+  signUp: (email: string, password: string): { success: boolean; user?: User; error?: string } => {
     if (!email || !password) {
       return { success: false, error: "Email and password are required." };
     }
@@ -31,7 +31,7 @@ export const createAuthUseCases = () => ({
   },
 
   // Signs in an existing user.
-  signIn: (email, password) => {
+  signIn: (email: string, password: string): { success: boolean; user?: User; error?: string } => {
     const user = userRepo.findByEmail(email);
     if (!user || user.password !== password) {
       return { success: false, error: "Invalid email or password." };
@@ -42,13 +42,13 @@ export const createAuthUseCases = () => ({
   },
 
   // Signs out the current user.
-  signOut: () => {
+  signOut: (): { success: boolean } => {
     authRepo.clearAuthenticatedUser();
     return { success: true };
   },
 
   // Gets the currently authenticated user.
-  getCurrentUser: () => {
+  getCurrentUser: (): { success: boolean; user: User | null } => {
     const user = authRepo.getAuthenticatedUser();
     return { success: true, user };
   },

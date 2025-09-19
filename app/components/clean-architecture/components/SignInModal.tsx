@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -10,20 +9,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-const SignUpModal = ({ open, onOpenChange, onSignUp }) => {
+interface SignInModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSignIn: (email: string, password: string) => void;
+}
+
+const SignInModal: React.FC<SignInModalProps> = ({ open, onOpenChange, onSignIn }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSignUp(email, password);
+    onSignIn(email, password);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Sign Up</DialogTitle>
+          <DialogTitle>Sign In</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="mt-4">
           <div className="grid gap-4">
@@ -50,7 +55,7 @@ const SignUpModal = ({ open, onOpenChange, onSignUp }) => {
             </div>
           </div>
           <Button type="submit" className="mt-4 w-full">
-            Sign Up
+            Sign In
           </Button>
         </form>
       </DialogContent>
@@ -58,4 +63,4 @@ const SignUpModal = ({ open, onOpenChange, onSignUp }) => {
   );
 };
 
-export default SignUpModal;
+export default SignInModal;

@@ -1,14 +1,23 @@
-// ===================================================================================
-// --- LAYER 3: FRAMEWORKS & DRIVERS (REACT UI COMPONENTS) ---
-// The outermost layer. Handles rendering and user input.
-// It calls use cases to perform actions and receives new state to render.
-// ===================================================================================
-
 import { useState } from "react";
+import { Task } from "../core/entities";
 
-// import { Description } from "../../clean-architecture/components/Description-modal";
+interface TaskItemProps {
+  task: Task;
+  onAction: (taskId: string, actionType: string) => void;
+  onEditField: (taskId: string, field: keyof Task, value: any) => void;
+  onAddUpdate: (taskId: string, updateText: string) => void;
+  onProjectFilter: (projectId: string | null) => void;
+  children: React.ReactNode;
+}
 
-export const TaskItem = ({
+interface ActionIconsProps {
+  task: Task;
+  onAction: (taskId: string, actionType: string) => void;
+  setNoUpdatesError: (error: boolean) => void;
+  setUpdateField: (show: boolean) => void;
+}
+
+export const TaskItem: React.FC<TaskItemProps> = ({
   task,
   onAction,
   onEditField,
@@ -19,12 +28,12 @@ export const TaskItem = ({
   const [isDetailsOpen, setIsDetailsOpen] = useState(
     !!task.details || task.updates?.length > 0
   );
-  const [isEditing, setIsEditing] = useState(null);
+  const [isEditing, setIsEditing] = useState<keyof Task | null>(null);
   const [updateText, setUpdateText] = useState("");
   const [showUpdateField, setUpdateField] = useState(false);
   const [noUpdatesError, setNoUpdatesError] = useState(false);
 
-  const handleEdit = (field, value) => {
+  const handleEdit = (field: keyof Task, value: any) => {
     setIsEditing(null);
     onEditField(task.id, field, value);
   };
@@ -103,7 +112,7 @@ export const TaskItem = ({
     </div>
   );
 };
-function ActionIcons({ task, onAction, setNoUpdatesError, setUpdateField }) {
+function ActionIcons({ task, onAction, setNoUpdatesError, setUpdateField }: ActionIconsProps) {
   return (
     <div className="flex-shrink-0 ml-4 space-x-2">
       {task.status === "inbox" && (
@@ -160,7 +169,7 @@ function ActionIcons({ task, onAction, setNoUpdatesError, setUpdateField }) {
   );
 }
 
-function DoneRemarks({ task }) {
+function DoneRemarks({ task }: { task: Task }) {
   return (
     <div className="mt-2 text-sm text-gray-400 border-l-2 border-gray-600 pl-2">
       <b>Reason to Mark as Done: </b>
@@ -170,23 +179,30 @@ function DoneRemarks({ task }) {
       )}
       <br></br>
       <p className="mt-1 font-medium">
-        Completed: {new Date(task.completedAt).toLocaleString()}
+        Completed: {new Date(task.completedAt!).toLocaleString()}
       </p>
     </div>
   );
 }
 
-function PausedRemarks({ isEditing, task, handleEdit, setIsEditing }) {
+interface PausedRemarksProps {
+  isEditing: keyof Task | null;
+  task: Task;
+  handleEdit: (field: keyof Task, value: any) => void;
+  setIsEditing: (field: keyof Task | null) => void;
+}
+
+function PausedRemarks({ isEditing, task, handleEdit, setIsEditing }: PausedRemarksProps) {
   return (
     <div className="mt-2 text-sm text-gray-400 border-l-2 border-gray-600 pl-2">
       <b>Reason to pause this </b>
       {isEditing === "pausedContext" ? (
         <textarea
           className="w-full bg-gray-800 border border-gray-600 rounded-md p-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
-          defaultValue={task.pausedContext}
+          defaultValue={task.pausedContext || ""}
           onBlur={(e) => handleEdit("pausedContext", e.target.value)}
           onKeyPress={(e) =>
-            e.key === "Enter" && !e.shiftKey && e.target.blur()
+            e.key === "Enter" && !e.shiftKey && (e.target as HTMLTextAreaElement).blur()
           }
           autoFocus
         />
@@ -195,7 +211,7 @@ function PausedRemarks({ isEditing, task, handleEdit, setIsEditing }) {
           className="italic editable"
           onClick={() => setIsEditing("pausedContext")}
         >
-          {task.pausedContext}
+          {task.pausedContext || "Add context..."}
           <p className="mt-1 font-medium">
             <br></br>
             Resume: {task.resumeDate}
@@ -211,6 +227,15 @@ function PausedRemarks({ isEditing, task, handleEdit, setIsEditing }) {
   );
 }
 
+interface UpdatesProps {
+  noUpdatesError: boolean;
+  task: Task;
+  showUpdateField: boolean;
+  updateText: string;
+  setUpdateText: (text: string) => void;
+  handleUpdates: () => void;
+}
+
 function Updates({
   noUpdatesError,
   task,
@@ -218,7 +243,7 @@ function Updates({
   updateText,
   setUpdateText,
   handleUpdates,
-}) {
+}: UpdatesProps) {
   return (
     <div className="mt-4">
       <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -264,7 +289,14 @@ function Updates({
   );
 }
 
-function Details({ isEditing, task, handleEdit, setIsEditing }) {
+interface DetailsProps {
+  isEditing: keyof Task | null;
+  task: Task;
+  handleEdit: (field: keyof Task, value: any) => void;
+  setIsEditing: (field: keyof Task | null) => void;
+}
+
+function Details({ isEditing, task, handleEdit, setIsEditing }: DetailsProps) {
   return (
     <div className="mt-2">
       <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -289,6 +321,16 @@ function Details({ isEditing, task, handleEdit, setIsEditing }) {
   );
 }
 
+interface TaskDescriptionProps {
+  setIsDetailsOpen: (open: boolean) => void;
+  isDetailsOpen: boolean;
+  isEditing: keyof Task | null;
+  task: Task;
+  handleEdit: (field: keyof Task, value: any) => void;
+  setIsEditing: (field: keyof Task | null) => void;
+  onProjectFilter: (projectId: string | null) => void;
+}
+
 function TaskDescription({
   setIsDetailsOpen,
   isDetailsOpen,
@@ -297,7 +339,7 @@ function TaskDescription({
   handleEdit,
   setIsEditing,
   onProjectFilter,
-}) {
+}: TaskDescriptionProps) {
   return (
     <div
       className="flex items-center cursor-pointer"
@@ -310,7 +352,7 @@ function TaskDescription({
           defaultValue={task.description}
           onBlur={(e) => handleEdit("description", e.target.value)}
           onKeyPress={(e) =>
-            e.key === "Enter" && !e.shiftKey && e.target.blur()
+            e.key === "Enter" && !e.shiftKey && (e.target as HTMLInputElement).blur()
           }
           autoFocus
         />

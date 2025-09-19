@@ -1,8 +1,12 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 
-const AuthPage = ({ onSignInClick, onSignUpClick }) => {
+interface AuthPageProps {
+  onSignInClick: () => void;
+  onSignUpClick: () => void;
+}
+
+const AuthPage: React.FC<AuthPageProps> = ({ onSignInClick, onSignUpClick }) => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white">
       <div className="text-center">

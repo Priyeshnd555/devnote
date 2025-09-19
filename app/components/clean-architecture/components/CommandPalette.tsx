@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -8,7 +7,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
-const CommandPalette = ({ open, onOpenChange, onSelectAction }) => {
+interface CommandPaletteProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelectAction: (actionId: string) => void;
+}
+
+const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onOpenChange, onSelectAction }) => {
   const [search, setSearch] = useState("");
 
   const actions = [
