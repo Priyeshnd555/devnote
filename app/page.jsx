@@ -9,6 +9,12 @@ import { SettingsFactory } from "./components/clean-architecture/core/entities";
 import SignUpModal from "./components/clean-architecture/components/SignUpModal";
 import SignInModal from "./components/clean-architecture/components/SignInModal";
 import AuthPage from "./components/clean-architecture/components/AuthPage";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const INBOX_OVERLOADED = 8;
 
@@ -215,11 +221,18 @@ export default function App() {
                 #notification-toast { position: fixed;  left: 85%; bottom: 20px; transform: translateX(-50%); background-color: #1f2937; color: #f97316; padding: 12px 24px; border-radius: 8px; border: 1px solid #374151; transition: all 0.3s ease-in-out; opacity: 0; pointer-events: none; }
                 #notification-toast.show { opacity: 1; pointer-events: auto; }
             `}</style>
-      <header className="text-center mb-10">
+      <header className="flex items-center justify-between pb-4">
         <h1 className="text-4xl font-bold tracking-tight">DevNote</h1>
-        {currentUser && (
-          <p className="mt-2 text-lg text-gray-400">{currentUser.email}</p>
-        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="text-lg text-gray-400 hover:text-white">
+              :::
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onSelect={handleSignOut}>Sign Out {currentUser.name} </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       <main>
@@ -235,24 +248,22 @@ export default function App() {
 
         <div className="border-b border-gray-700 mb-8">
           <nav className="flex flex-wrap space-x-1 sm:space-x-2">
-            {["inbox", "today", "paused", "done", "spaces", "more"].map(
-              (view) => (
-                <button
-                  key={view}
-                  onClick={() => setCurrentView(view)}
-                  className={`nav-btn py-2 px-4 font-medium border-b-2 ${
-                    currentView === view
-                      ? "text-orange-500 border-orange-500"
-                      : "text-gray-400 border-transparent hover:text-white"
-                  }`}
-                >
-                  {view.charAt(0).toUpperCase() + view.slice(1)}
-                  {view === "inbox" &&
-                    parseInt(counts.inbox?.split(":")?.[1]?.trim() ?? 0) >
-                      INBOX_OVERLOADED && <span className="mt-1"> 🔥 </span>}
-                </button>
-              )
-            )}
+            {["inbox", "today", "paused", "done", "spaces"].map((view) => (
+              <button
+                key={view}
+                onClick={() => setCurrentView(view)}
+                className={`nav-btn py-2 px-4 font-medium border-b-2 ${
+                  currentView === view
+                    ? "text-orange-500 border-orange-500"
+                    : "text-gray-400 border-transparent hover:text-white"
+                }`}
+              >
+                {view.charAt(0).toUpperCase() + view.slice(1)}
+                {view === "inbox" &&
+                  parseInt(counts.inbox?.split(":")?.[1]?.trim() ?? 0) >
+                    INBOX_OVERLOADED && <span className="mt-1"> 🔥 </span>}
+              </button>
+            ))}
           </nav>
           <div className="mt-2 text-sm text-gray-500 flex flex-wrap gap-x-4">
             <span>{counts.inbox}</span>
@@ -280,19 +291,6 @@ export default function App() {
               currentSpace={settings.space}
               handleSpaceChange={handleSpaceChange}
             />
-          )}
-          {currentView === "more" && (
-            <div className="view">
-              <h2 className="text-2xl font-semibold text-white mb-4">More</h2>
-              <div className="space-y-4">
-                <button
-                  onClick={handleSignOut}
-                  className="w-full text-left p-2 hover:bg-gray-800 rounded-md"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
           )}
           {["inbox", "today", "paused", "done"].map((view) => (
             <div
