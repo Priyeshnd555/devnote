@@ -1,7 +1,6 @@
 import {
   createLocalStorageRepository,
   createSettingsRepository,
-  createAuthRepository,
 } from "../adapters/repositories";
 import { TaskFactory } from "./entities";
 
@@ -15,14 +14,14 @@ import { TaskFactory } from "./entities";
 export const createAppUseCases = (userId) => {
   const taskRepo = createLocalStorageRepository(userId);
   const settingsRepo = createSettingsRepository();
-  const currentUser = createAuthRepository();
 
   return {
     // Gets all necessary data to bootstrap the application.
     getInitialState: () => {
+      const settings = settingsRepo.get();
       return {
-        tasks: taskRepo.getAll(currentUser.getAuthenticatedUser()?.name),
-        settings: settingsRepo.get(),
+        tasks: taskRepo.getAll(settings.space),
+        settings: settings,
       };
     },
 
