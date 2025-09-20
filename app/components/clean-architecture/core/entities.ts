@@ -38,10 +38,12 @@ const generateTaskId = (): string => {
   // Prefer the browser's crypto API when available
   // Note: this module is used client-side in this app
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof crypto !== "undefined" && typeof (crypto as any).randomUUID === "function") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return `task_${(crypto as any).randomUUID()}`;
     }
-  } catch (_) {
+  } catch {
     // ignore and fall back
   }
   // Fallback: timestamp + random suffix

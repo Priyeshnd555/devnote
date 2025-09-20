@@ -2,8 +2,7 @@ import {
   createLocalStorageRepository,
   createSettingsRepository,
 } from "../adapters/repositories";
-import { createAuthUseCases } from "./authUseCases";
-import { TaskFactory, Task, Settings } from "./entities";
+import { TaskFactory, Task, Settings, User } from "./entities";
 
 /**
  * --- USE CASES ---
@@ -12,7 +11,8 @@ import { TaskFactory, Task, Settings } from "./entities";
  * This is where all your application's unique rules live.
  */
 
-export const createAppUseCases = (userId: string) => {
+export const createAppUseCases = (user: User | null) => {
+  const userId = user?.id ?? "anonymous";
   const taskRepo = createLocalStorageRepository(userId);
   const settingsRepo = createSettingsRepository();
 
@@ -34,9 +34,6 @@ export const createAppUseCases = (userId: string) => {
         return { success: false, error: "Task description cannot be empty." };
       }
 
-       const { user } = createAuthUseCases().getCurrentUser();
-       // Only update if the user identity actually changed to avoid re-render loops
-
       const taskDescription = description;
       const match = description.match(/\s#([\w-]+)$/);
       const projectId = match ? match[1] : null;
@@ -45,7 +42,7 @@ export const createAppUseCases = (userId: string) => {
         description: taskDescription,
         projectId,
       });
-      taskRepo.save(task, user?.id);
+      taskRepo.save(task, userId);
       return {
         success: true,
         tasks: taskRepo.getAll(settingsRepo.get().space),
@@ -125,14 +122,14 @@ export const createAppUseCases = (userId: string) => {
     },
 
     // Updates a specific field on a task.
-    updateTaskField: (
+    updateTaskField: <K extends keyof Task>(
       taskId: string,
-      field: keyof Task,
-      value: any
+      field: K,
+      value: Task[K]
     ): { success: boolean; tasks?: Task[]; error?: string } => {
       const task = taskRepo.findById(taskId);
       if (task && typeof task[field] !== "undefined") {
-        (task[field] as any) = value;
+        task[field] = value;
         taskRepo.update(task);
         return {
           success: true,

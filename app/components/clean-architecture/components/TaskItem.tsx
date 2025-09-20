@@ -4,7 +4,7 @@ import { Task } from "../core/entities";
 interface TaskItemProps {
   task: Task;
   onAction: (taskId: string, actionType: string) => void;
-  onEditField: (taskId: string, field: keyof Task, value: any) => void;
+  onEditField: <K extends keyof Task>(taskId: string, field: K, value: Task[K]) => void;
   onAddUpdate: (taskId: string, updateText: string) => void;
   onProjectFilter: (projectId: string | null) => void;
   children: React.ReactNode;
@@ -33,7 +33,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   const [showUpdateField, setUpdateField] = useState(false);
   const [noUpdatesError, setNoUpdatesError] = useState(false);
 
-  const handleEdit = (field: keyof Task, value: any) => {
+  const handleEdit = <K extends keyof Task>(field: K, value: Task[K]) => {
     setIsEditing(null);
     onEditField(task.id, field, value);
   };
@@ -188,7 +188,7 @@ function DoneRemarks({ task }: { task: Task }) {
 interface PausedRemarksProps {
   isEditing: keyof Task | null;
   task: Task;
-  handleEdit: (field: keyof Task, value: any) => void;
+  handleEdit: <K extends keyof Task>(field: K, value: Task[K]) => void;
   setIsEditing: (field: keyof Task | null) => void;
 }
 
@@ -292,7 +292,7 @@ function Updates({
 interface DetailsProps {
   isEditing: keyof Task | null;
   task: Task;
-  handleEdit: (field: keyof Task, value: any) => void;
+  handleEdit: <K extends keyof Task>(field: K, value: Task[K]) => void;
   setIsEditing: (field: keyof Task | null) => void;
 }
 
@@ -326,7 +326,7 @@ interface TaskDescriptionProps {
   isDetailsOpen: boolean;
   isEditing: keyof Task | null;
   task: Task;
-  handleEdit: (field: keyof Task, value: any) => void;
+  handleEdit: <K extends keyof Task>(field: K, value: Task[K]) => void;
   setIsEditing: (field: keyof Task | null) => void;
   onProjectFilter: (projectId: string | null) => void;
 }

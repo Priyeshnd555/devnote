@@ -43,10 +43,9 @@ export default function App() {
 
   // --- ARCHITECTURE SETUP ---
   const authUseCases = useMemo(() => createAuthUseCases(), []);
-  const userId = currentUser?.id ?? "anonymous";
   const appUseCases = useMemo(() => {
-    return createAppUseCases(userId);
-  }, [userId]);
+    return createAppUseCases(currentUser);
+  }, [currentUser]);
 
   // --- EFFECTS ---
   useEffect(() => {
@@ -143,7 +142,11 @@ export default function App() {
     }
   };
 
-  const handleEditField = (taskId: string, field: keyof Task, value: any) => {
+  const handleEditField = <K extends keyof Task>(
+    taskId: string,
+    field: K,
+    value: Task[K]
+  ) => {
     const result = appUseCases.updateTaskField(taskId, field, value);
     if (result.success) setTasks(result.tasks || []);
     setNotification(
