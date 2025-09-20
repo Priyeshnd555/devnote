@@ -19,17 +19,42 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
     getAll: (space: string): Task[] => {
       const activeSpace =
         space || localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
-      return JSON.parse(
+      const raw: Task[] = JSON.parse(
         localStorage.getItem(getStorageKey(activeSpace)) || "[]"
       );
+      // Dedupe by id to avoid rendering duplicates if historical data contains dupes
+      const seen = new Set<string>();
+      const deduped: Task[] = [];
+      for (const t of raw) {
+        if (!t || !t.id) continue;
+        if (!seen.has(t.id)) {
+          seen.add(t.id);
+          deduped.push(t);
+        }
+      }
+      if (deduped.length !== raw.length) {
+        localStorage.setItem(
+          getStorageKey(activeSpace),
+          JSON.stringify(deduped)
+        );
+      }
+      return deduped;
     },
-    save: (item: Task) => {
+    save: (item: Task, userId: string) => {
       const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
       const items: Task[] = JSON.parse(
         localStorage.getItem(getStorageKey(space)) || "[]"
       );
       items.unshift(item); // Add new items to the top
-      localStorage.setItem(getStorageKey(space), JSON.stringify(items));
+      // Ensure we never persist duplicates by id
+      const seen = new Set<string>();
+      const unique = items.filter((t) => {
+        if (!t || !t.id) return false;
+        if (seen.has(t.id)) return false;
+        seen.add(t.id);
+        return true;
+      });
+      localStorage.setItem(getStorageKey(space), JSON.stringify(unique));
     },
     update: (updatedItem: Task) => {
       const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
@@ -49,12 +74,21 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       return items.find((item) => item.id === id);
     },
     merge: (newUserId: string) => {
-      const anonymousTasks = createLocalStorageRepository("anonymous").getAll("Work");
+      const anonymousTasks =
+        createLocalStorageRepository("anonymous").getAll("Work");
       const userTasks = createLocalStorageRepository(newUserId).getAll("Work");
       const mergedTasks = [...anonymousTasks, ...userTasks];
+      // Dedupe by id on merge
+      const seen = new Set<string>();
+      const unique = mergedTasks.filter((t) => {
+        if (!t || !t.id) return false;
+        if (seen.has(t.id)) return false;
+        seen.add(t.id);
+        return true;
+      });
       localStorage.setItem(
         `${BASE_KEY}+${newUserId}+Work`,
-        JSON.stringify(mergedTasks)
+        JSON.stringify(unique)
       );
       // Clear anonymous tasks after merging
       localStorage.removeItem(`${BASE_KEY}+anonymous+Work`);

@@ -32,9 +32,25 @@ export interface User {
  * --- ENTITIES ---
  * Simple factory functions to create consistent data structures for our core concepts.
  */
+
+// Generate collision-resistant IDs for tasks
+const generateTaskId = (): string => {
+  // Prefer the browser's crypto API when available
+  // Note: this module is used client-side in this app
+  try {
+    if (typeof crypto !== "undefined" && typeof (crypto as any).randomUUID === "function") {
+      return `task_${(crypto as any).randomUUID()}`;
+    }
+  } catch (_) {
+    // ignore and fall back
+  }
+  // Fallback: timestamp + random suffix
+  return `task_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+};
+
 export const TaskFactory = {
   create: ({ description, projectId = null }: { description: string; projectId?: string | null }): Task => ({
-    id: `task_${Date.now()}`,
+    id: generateTaskId(),
     description,
     projectId,
     status: "inbox", // 'inbox', 'today', 'paused', 'done'

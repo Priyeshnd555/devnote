@@ -43,15 +43,16 @@ export default function App() {
 
   // --- ARCHITECTURE SETUP ---
   const authUseCases = useMemo(() => createAuthUseCases(), []);
+  const userId = currentUser?.id ?? "anonymous";
   const appUseCases = useMemo(() => {
-    const userId = currentUser ? currentUser.id : "anonymous";
     return createAppUseCases(userId);
-  }, [currentUser]);
+  }, [userId]);
 
   // --- EFFECTS ---
   useEffect(() => {
     const { user } = authUseCases.getCurrentUser();
-    setCurrentUser(user);
+    // Only update if the user identity actually changed to avoid re-render loops
+    setCurrentUser((prev) => (prev?.id === user?.id ? prev : user));
   }, [authUseCases]);
 
   useEffect(() => {
@@ -70,18 +71,15 @@ export default function App() {
   // --- EVENT HANDLERS (These call the use cases) ---
   const handleTaskSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const description = (
-      e.currentTarget.elements[0] as HTMLInputElement
-    ).value.trim();
-    if (searchQuery) {
-      setSearchQuery("");
-      // If there is a search query, do not add a new task
-      return;
-    }
+    // Use the controlled state as the single source of truth
+    const description = searchQuery.trim();
+    if (!description) return;
+
+    // Reset search immediately, then create the task
+    setSearchQuery("");
     const result = appUseCases.addTask(description);
     if (result.success) {
       setTasks(result.tasks || []);
-      (e.currentTarget.elements[0] as HTMLInputElement).value = "";
       setNotification("Task added to Inbox.");
     }
   };

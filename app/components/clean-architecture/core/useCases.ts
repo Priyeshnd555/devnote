@@ -2,6 +2,7 @@ import {
   createLocalStorageRepository,
   createSettingsRepository,
 } from "../adapters/repositories";
+import { createAuthUseCases } from "./authUseCases";
 import { TaskFactory, Task, Settings } from "./entities";
 
 /**
@@ -26,12 +27,17 @@ export const createAppUseCases = (userId: string) => {
     },
 
     // Pride Guardrail: Quick capture of a task.
-    addTask: (description: string): { success: boolean; tasks?: Task[]; error?: string } => {
+    addTask: (
+      description: string
+    ): { success: boolean; tasks?: Task[]; error?: string } => {
       if (!description || description.trim() === "") {
         return { success: false, error: "Task description cannot be empty." };
       }
 
-      let taskDescription = description;
+       const { user } = createAuthUseCases().getCurrentUser();
+       // Only update if the user identity actually changed to avoid re-render loops
+
+      const taskDescription = description;
       const match = description.match(/\s#([\w-]+)$/);
       const projectId = match ? match[1] : null;
 
@@ -39,84 +45,124 @@ export const createAppUseCases = (userId: string) => {
         description: taskDescription,
         projectId,
       });
-      taskRepo.save(task);
-      return { success: true, tasks: taskRepo.getAll(settingsRepo.get().space) };
+      taskRepo.save(task, user?.id);
+      return {
+        success: true,
+        tasks: taskRepo.getAll(settingsRepo.get().space),
+      };
     },
 
-    // Moves a task to the 'today' list.
-    moveTaskToToday: (taskId: string): { success: boolean; tasks?: Task[]; error?: string } => {
+    // Moves a task to the 'today' list. app/components/clean-architecture/core/useCases.ts
+    moveTaskToToday: (
+      taskId: string
+    ): { success: boolean; tasks?: Task[]; error?: string } => {
       const task = taskRepo.findById(taskId);
       if (task) {
         task.status = "today";
         taskRepo.update(task);
-        return { success: true, tasks: taskRepo.getAll(settingsRepo.get().space) };
+        return {
+          success: true,
+          tasks: taskRepo.getAll(settingsRepo.get().space),
+        };
       }
       return { success: false, error: "Task not found." };
     },
 
     // Pauses a task with context.
-    pauseTask: (taskId: string, { context, resumeDate }: { context: string; resumeDate: string }): { success: boolean; tasks?: Task[]; error?: string } => {
+    pauseTask: (
+      taskId: string,
+      { context, resumeDate }: { context: string; resumeDate: string }
+    ): { success: boolean; tasks?: Task[]; error?: string } => {
       const task = taskRepo.findById(taskId);
       if (task) {
         task.status = "paused";
         task.pausedContext = context;
         task.resumeDate = resumeDate;
         taskRepo.update(task);
-        return { success: true, tasks: taskRepo.getAll(settingsRepo.get().space) };
+        return {
+          success: true,
+          tasks: taskRepo.getAll(settingsRepo.get().space),
+        };
       }
       return { success: false, error: "Task not found." };
     },
 
     // Resumes a paused task.
-    resumeTask: (taskId: string): { success: boolean; tasks?: Task[]; error?: string } => {
+    resumeTask: (
+      taskId: string
+    ): { success: boolean; tasks?: Task[]; error?: string } => {
       const task = taskRepo.findById(taskId);
       if (task) {
         task.status = "today";
         task.pausedContext = null;
         task.resumeDate = null;
         taskRepo.update(task);
-        return { success: true, tasks: taskRepo.getAll(settingsRepo.get().space) };
+        return {
+          success: true,
+          tasks: taskRepo.getAll(settingsRepo.get().space),
+        };
       }
       return { success: false, error: "Task not found." };
     },
 
     // Completes a task with remarks.
-    completeTask: (taskId: string, { remarks }: { remarks: string }): { success: boolean; tasks?: Task[]; error?: string } => {
+    completeTask: (
+      taskId: string,
+      { remarks }: { remarks: string }
+    ): { success: boolean; tasks?: Task[]; error?: string } => {
       const task = taskRepo.findById(taskId);
       if (task) {
         task.status = "done";
         task.doneRemarks = remarks;
         task.completedAt = new Date().toISOString();
         taskRepo.update(task);
-        return { success: true, tasks: taskRepo.getAll(settingsRepo.get().space) };
+        return {
+          success: true,
+          tasks: taskRepo.getAll(settingsRepo.get().space),
+        };
       }
       return { success: false, error: "Task not found." };
     },
 
     // Updates a specific field on a task.
-    updateTaskField: (taskId: string, field: keyof Task, value: any): { success: boolean; tasks?: Task[]; error?: string } => {
+    updateTaskField: (
+      taskId: string,
+      field: keyof Task,
+      value: any
+    ): { success: boolean; tasks?: Task[]; error?: string } => {
       const task = taskRepo.findById(taskId);
       if (task && typeof task[field] !== "undefined") {
         (task[field] as any) = value;
         taskRepo.update(task);
-        return { success: true, tasks: taskRepo.getAll(settingsRepo.get().space) };
+        return {
+          success: true,
+          tasks: taskRepo.getAll(settingsRepo.get().space),
+        };
       }
       return { success: false, error: `Task or field '${field}' not found.` };
     },
 
     // Adds a text update to a task's log.
-    addTaskUpdate: (taskId: string, updateText: string): { success: boolean; tasks?: Task[]; error?: string } => {
+    addTaskUpdate: (
+      taskId: string,
+      updateText: string
+    ): { success: boolean; tasks?: Task[]; error?: string } => {
       const task = taskRepo.findById(taskId);
       if (task) {
         task.updates = [updateText, ...(task.updates || [])];
         taskRepo.update(task);
-        return { success: true, tasks: taskRepo.getAll(settingsRepo.get().space) };
+        return {
+          success: true,
+          tasks: taskRepo.getAll(settingsRepo.get().space),
+        };
       }
       return { success: false, error: "Task not found." };
     },
 
     // Changes the current workspace.
-    setSpace: (space: "Work" | "Personal" | "Project"): { success: boolean; settings: Settings; tasks: Task[] } => {
+    setSpace: (
+      space: "Work" | "Personal" | "Project"
+    ): { success: boolean; settings: Settings; tasks: Task[] } => {
       const settings = settingsRepo.get();
       settings.space = space;
       console.log("=================", settings);
