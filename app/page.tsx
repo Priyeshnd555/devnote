@@ -39,6 +39,7 @@ export default function App() {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // --- ARCHITECTURE SETUP ---
   const authUseCases = useMemo(() => createAuthUseCases(), []);
@@ -72,11 +73,24 @@ export default function App() {
     const description = (
       e.currentTarget.elements[0] as HTMLInputElement
     ).value.trim();
+    if (searchQuery) {
+      setSearchQuery("");
+      // If there is a search query, do not add a new task
+      return;
+    }
     const result = appUseCases.addTask(description);
     if (result.success) {
       setTasks(result.tasks || []);
       (e.currentTarget.elements[0] as HTMLInputElement).value = "";
       setNotification("Task added to Inbox.");
+    }
+  };
+
+  const handleSearch = () => {
+    // The filtering is already done in the tasksToRender
+    // This function is just to trigger the search when the icon is clicked
+    if (!searchQuery) {
+      setSearchQuery("");
     }
   };
 
@@ -211,9 +225,14 @@ export default function App() {
     );
   }
 
-  const tasksToRender = activeFilterProject
-    ? tasks.filter((task) => task.projectId === activeFilterProject)
-    : tasks;
+  const tasksToRender = tasks
+    .filter((task) =>
+      task.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .filter((task) =>
+      activeFilterProject ? task.projectId === activeFilterProject : true
+    );
+
   const tasksByStatus: { [key: string]: Task[] } = {
     inbox: [],
     today: [],
@@ -271,9 +290,24 @@ export default function App() {
           <form onSubmit={handleTaskSubmit} className="relative">
             <input
               type="text"
-              placeholder="Fix login bug #api (use # for projects)"
-              className="w-full bg-gray-800 border-2 border-gray-700 rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+              placeholder="Search tasks or add a new one..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-gray-800 border-2 border-gray-700 rounded-lg py-3 px-4 pl-10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
             />
+            <svg
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 cursor-pointer"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              onClick={handleSearch}
+            >
+              <path
+                fillRule="evenodd"
+                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                clipRule="evenodd"
+              />
+            </svg>
           </form>
         </div>
 
@@ -326,14 +360,9 @@ export default function App() {
           {["inbox", "today", "paused", "done"].map((view) => (
             <div
               key={view}
-              className={`view ${currentView === view ? "" : "hidden"}`}
-            >
-              <h2 className="text-2xl font-semibold text-white mb-4">
-                {view === "inbox" && "📥 Inbox"}
-                {view === "today" && "🎯 Today's Focus"}
-                {view === "paused" && "🚧 Paused"}
-                {view === "done" && "🏁 Progress Log"}
-              </h2>
+              className={`view ${
+                searchQuery ? '' : currentView === view ? '' : 'hidden'
+              }`}>
               {view === "today" && tasksByStatus[view].length > 5 && (
                 <p className="text-sm text-amber-400 bg-amber-900/50 p-2 rounded-md mb-4">
                   A long list can be overwhelming. Consider pausing some tasks
