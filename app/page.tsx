@@ -5,7 +5,12 @@ import { createAppUseCases } from "./components/clean-architecture/core/useCases
 import { createAuthUseCases } from "./components/clean-architecture/core/authUseCases";
 import { TaskItem } from "./components/clean-architecture/components/TaskItem";
 import { Spaces } from "./components/clean-architecture/components/Spaces";
-import { SettingsFactory, Task, Settings, User } from "./components/clean-architecture/core/entities";
+import {
+  SettingsFactory,
+  Task,
+  Settings,
+  User,
+} from "./components/clean-architecture/core/entities";
 import SignUpModal from "./components/clean-architecture/components/SignUpModal";
 import SignInModal from "./components/clean-architecture/components/SignInModal";
 import AuthPage from "./components/clean-architecture/components/AuthPage";
@@ -24,7 +29,9 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [settings, setSettings] = useState<Settings>(SettingsFactory.create());
   const [currentView, setCurrentView] = useState("inbox");
-  const [activeFilterProject, setActiveFilterProject] = useState<string | null>(null);
+  const [activeFilterProject, setActiveFilterProject] = useState<string | null>(
+    null
+  );
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [action, setAction] = useState("");
   const [notification, setNotification] = useState("");
@@ -62,7 +69,9 @@ export default function App() {
   // --- EVENT HANDLERS (These call the use cases) ---
   const handleTaskSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const description = (e.currentTarget.elements[0] as HTMLInputElement).value.trim();
+    const description = (
+      e.currentTarget.elements[0] as HTMLInputElement
+    ).value.trim();
     const result = appUseCases.addTask(description);
     if (result.success) {
       setTasks(result.tasks || []);
@@ -90,9 +99,16 @@ export default function App() {
 
   const handlePauseSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const context = (e.currentTarget.elements.namedItem("pause-context") as HTMLTextAreaElement).value;
-    const resumeDate = (e.currentTarget.elements.namedItem("resume-date") as HTMLInputElement).value;
-    const result = appUseCases.pauseTask(editingTaskId!, { context, resumeDate });
+    const context = (
+      e.currentTarget.elements.namedItem("pause-context") as HTMLTextAreaElement
+    ).value;
+    const resumeDate = (
+      e.currentTarget.elements.namedItem("resume-date") as HTMLInputElement
+    ).value;
+    const result = appUseCases.pauseTask(editingTaskId!, {
+      context,
+      resumeDate,
+    });
     if (result.success) {
       setTasks(result.tasks || []);
       setEditingTaskId(null);
@@ -103,7 +119,9 @@ export default function App() {
 
   const handleDoneSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const remarks = (e.currentTarget.elements.namedItem("done-remarks") as HTMLTextAreaElement).value;
+    const remarks = (
+      e.currentTarget.elements.namedItem("done-remarks") as HTMLTextAreaElement
+    ).value;
     const result = appUseCases.completeTask(editingTaskId!, { remarks });
     if (result.success) {
       setTasks(result.tasks || []);
@@ -196,7 +214,12 @@ export default function App() {
   const tasksToRender = activeFilterProject
     ? tasks.filter((task) => task.projectId === activeFilterProject)
     : tasks;
-  const tasksByStatus: { [key: string]: Task[] } = { inbox: [], today: [], paused: [], done: [] };
+  const tasksByStatus: { [key: string]: Task[] } = {
+    inbox: [],
+    today: [],
+    paused: [],
+    done: [],
+  };
   tasksToRender.forEach((task) => {
     if (tasksByStatus[task.status]) tasksByStatus[task.status].push(task);
   });
@@ -223,18 +246,24 @@ export default function App() {
                 #notification-toast { position: fixed;  left: 85%; bottom: 20px; transform: translateX(-50%); background-color: #1f2937; color: #f97316; padding: 12px 24px; border-radius: 8px; border: 1px solid #374151; transition: all 0.3s ease-in-out; opacity: 0; pointer-events: none; }
                 #notification-toast.show { opacity: 1; pointer-events: auto; }
             `}</style>
-      <header className="flex items-center justify-between pb-4">
-        <h1 className="text-4xl font-bold tracking-tight">DevNote</h1>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="text-lg text-gray-400 hover:text-white">
-              :::
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onSelect={handleSignOut}>Sign Out {currentUser.email} </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <header className="text-center mb-10">
+        {/* <h1 className="text-4xl font-bold tracking-tight">DevNote</h1> */}
+
+        <p className="mt-2 text-lg text-gray-400">
+          Become a better engineer. &nbsp;
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="text-lg text-gray-400 hover:text-white">
+                :::
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onSelect={handleSignOut}>
+                Sign Out {currentUser.email}{" "}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </p>
       </header>
 
       <main>
