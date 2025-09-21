@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createAppUseCases } from "./components/clean-architecture/core/useCases";
 import { createAuthUseCases } from "./components/clean-architecture/core/authUseCases";
+import { createSettingsUseCases } from "./components/clean-architecture/core/settingsUseCases";
 import { TaskItem } from "./components/clean-architecture/components/TaskItem";
 import { Spaces } from "./components/clean-architecture/components/Spaces";
 import {
@@ -43,6 +44,7 @@ export default function App() {
 
   // --- ARCHITECTURE SETUP ---
   const authUseCases = useMemo(() => createAuthUseCases(), []);
+  const settingsUseCases = useMemo(() => createSettingsUseCases(), []);
   const appUseCases = useMemo(() => {
     return createAppUseCases(currentUser);
   }, [currentUser]);
@@ -56,9 +58,10 @@ export default function App() {
 
   useEffect(() => {
     const initialState = appUseCases.getInitialState();
+    const initialSettings = settingsUseCases.getSettings();
     setTasks(initialState.tasks);
-    setSettings(initialState.settings);
-  }, [appUseCases, dataVersion]);
+    setSettings(initialSettings);
+  }, [appUseCases, dataVersion, settingsUseCases]);
 
   useEffect(() => {
     if (notification) {
@@ -167,10 +170,10 @@ export default function App() {
   };
 
   const handleSpaceChange = (newSpace: "Work" | "Personal" | "Project") => {
-    const result = appUseCases.setSpace(newSpace);
+    const result = settingsUseCases.setSpace(newSpace);
     if (result.success) {
       setSettings(result.settings);
-      setTasks(result.tasks); // Reload tasks for the new space
+      setDataVersion((v) => v + 1);
       setCurrentView("inbox"); // Reset view
       setNotification(`Switched to ${newSpace} space.`);
     }

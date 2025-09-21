@@ -1,8 +1,5 @@
-import {
-  createLocalStorageRepository,
-  createSettingsRepository,
-} from "../adapters/repositories";
-import { TaskFactory, Task, Settings, User } from "./entities";
+import { createLocalStorageRepository } from "../adapters/repositories";
+import { TaskFactory, Task, User } from "./entities";
 
 /**
  * --- USE CASES ---
@@ -14,15 +11,13 @@ import { TaskFactory, Task, Settings, User } from "./entities";
 export const createAppUseCases = (user: User | null) => {
   const userId = user?.id ?? "anonymous";
   const taskRepo = createLocalStorageRepository(userId);
-  const settingsRepo = createSettingsRepository();
 
   return {
     // Gets all necessary data to bootstrap the application.
-    getInitialState: (): { tasks: Task[]; settings: Settings } => {
-      const settings = settingsRepo.get();
+    getInitialState: (): { tasks: Task[] } => {
+      const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
       return {
-        tasks: taskRepo.getAll(settings.space),
-        settings: settings,
+        tasks: taskRepo.getAll(space),
       };
     },
 
@@ -43,9 +38,10 @@ export const createAppUseCases = (user: User | null) => {
         projectId,
       });
       taskRepo.save(task, userId);
+      const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
       return {
         success: true,
-        tasks: taskRepo.getAll(settingsRepo.get().space),
+        tasks: taskRepo.getAll(space),
       };
     },
 
@@ -57,9 +53,11 @@ export const createAppUseCases = (user: User | null) => {
       if (task) {
         task.status = "today";
         taskRepo.update(task);
+        const space =
+          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
-          tasks: taskRepo.getAll(settingsRepo.get().space),
+          tasks: taskRepo.getAll(space),
         };
       }
       return { success: false, error: "Task not found." };
@@ -76,9 +74,11 @@ export const createAppUseCases = (user: User | null) => {
         task.pausedContext = context;
         task.resumeDate = resumeDate;
         taskRepo.update(task);
+        const space =
+          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
-          tasks: taskRepo.getAll(settingsRepo.get().space),
+          tasks: taskRepo.getAll(space),
         };
       }
       return { success: false, error: "Task not found." };
@@ -94,9 +94,11 @@ export const createAppUseCases = (user: User | null) => {
         task.pausedContext = null;
         task.resumeDate = null;
         taskRepo.update(task);
+        const space =
+          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
-          tasks: taskRepo.getAll(settingsRepo.get().space),
+          tasks: taskRepo.getAll(space),
         };
       }
       return { success: false, error: "Task not found." };
@@ -113,9 +115,11 @@ export const createAppUseCases = (user: User | null) => {
         task.doneRemarks = remarks;
         task.completedAt = new Date().toISOString();
         taskRepo.update(task);
+        const space =
+          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
-          tasks: taskRepo.getAll(settingsRepo.get().space),
+          tasks: taskRepo.getAll(space),
         };
       }
       return { success: false, error: "Task not found." };
@@ -131,9 +135,11 @@ export const createAppUseCases = (user: User | null) => {
       if (task && typeof task[field] !== "undefined") {
         task[field] = value;
         taskRepo.update(task);
+        const space =
+          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
-          tasks: taskRepo.getAll(settingsRepo.get().space),
+          tasks: taskRepo.getAll(space),
         };
       }
       return { success: false, error: `Task or field '${field}' not found.` };
@@ -148,25 +154,14 @@ export const createAppUseCases = (user: User | null) => {
       if (task) {
         task.updates = [updateText, ...(task.updates || [])];
         taskRepo.update(task);
+        const space =
+          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
-          tasks: taskRepo.getAll(settingsRepo.get().space),
+          tasks: taskRepo.getAll(space),
         };
       }
       return { success: false, error: "Task not found." };
-    },
-
-    // Changes the current workspace.
-    setSpace: (
-      space: "Work" | "Personal" | "Project"
-    ): { success: boolean; settings: Settings; tasks: Task[] } => {
-      const settings = settingsRepo.get();
-      settings.space = space;
-      console.log("=================", settings);
-      settingsRepo.save(settings);
-      // This use case also needs to signal that tasks should be reloaded for the new space.
-      const newTasks = taskRepo.getAll(space); // The repo needs to know about the space.
-      return { success: true, settings: settingsRepo.get(), tasks: newTasks };
     },
   };
 };
