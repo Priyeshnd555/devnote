@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { RichTextViewer } from "./RichTextViewer";
 import { Task } from "../core/entities";
 
 interface TaskItemProps {
@@ -357,12 +358,7 @@ function TaskDescription({
           autoFocus
         />
       ) : (
-        <p
-          className="text-gray-200"
-          onDoubleClick={() => setIsEditing("description")}
-        >
-          {task.description}
-        </p>
+        <RichTextViewer text={task.description} />
       )}
       {task.projectId && (
         <span
