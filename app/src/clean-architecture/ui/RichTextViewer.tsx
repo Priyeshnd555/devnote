@@ -1,5 +1,5 @@
-
-import React from 'react';
+import { isJson } from "@/lib/utils";
+import React, { useMemo } from "react";
 
 interface RichTextViewerProps {
   text: string;
@@ -30,4 +30,19 @@ export const RichTextViewer: React.FC<RichTextViewerProps> = ({ text }) => {
       })}
     </p>
   );
+};
+
+interface JsonFormattedOutputProps {
+  str: string;
+}
+
+export const JsonFormattedOutput: React.FC<JsonFormattedOutputProps> = ({
+  str,
+}) => {
+  
+  const isJSON: boolean = useMemo(() => {
+    return isJson(str);
+  }, [str]);
+
+  return <>{isJSON ? <code>{str}</code> : <p>{str}</p>}</>;
 };
