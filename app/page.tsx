@@ -4,16 +4,16 @@ import React, { useState, useEffect, useMemo } from "react";
 import { createAppUseCases } from "./src/clean-architecture/core/useCases";
 import { createAuthUseCases } from "./src/clean-architecture/core/authUseCases";
 import { createSettingsUseCases } from "./src/clean-architecture/core/settingsUseCases";
-import { Spaces } from "./src/clean-architecture/components/Spaces";
+import { Spaces } from "./src/clean-architecture/ui/Spaces";
 import {
   SettingsFactory,
   Task,
   Settings,
   User,
 } from "./src/clean-architecture/core/entities";
-import SignUpModal from "./src/clean-architecture/components/SignUpModal";
-import SignInModal from "./src/clean-architecture/components/SignInModal";
-import AuthPage from "./src/clean-architecture/components/AuthPage";
+import SignUpModal from "./src/clean-architecture/ui/SignUpModal";
+import SignInModal from "./src/clean-architecture/ui/SignInModal";
+import AuthPage from "./src/clean-architecture/ui/AuthPage";
 import { Header } from "./src/features/Header";
 import { SearchBar } from "./src/features/SearchBar";
 import { TaskTabs } from "./src/features/TaskTabs";

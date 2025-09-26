@@ -1,4 +1,4 @@
-import { TaskItem } from "../clean-architecture/components/TaskItem";
+import { TaskItem } from "../clean-architecture/ui/TaskItem";
 import { Task } from "../clean-architecture/core/entities";
 
 interface TaskListProps {
