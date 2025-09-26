@@ -40,7 +40,7 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       }
       return deduped;
     },
-    save: (item: Task, userId: string) => {
+    save: (item: Task) => {
       const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
       const items: Task[] = JSON.parse(
         localStorage.getItem(getStorageKey(space)) || "[]"
@@ -101,14 +101,14 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
 /**
  * A specific repository for storing the user settings object.
  */
-export const createSettingsRepository = () => {
-  const STORAGE_KEY = "solo-flow-settings";
+export const createSettingsRepository = (userId: string) => {
+  const STORAGE_KEY = `solo-flow-space-${userId}`;
   const defaultSettings = SettingsFactory.create();
   return {
     get: (): Settings => {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (Boolean(stored) === false) {
-        createSettingsRepository().save(defaultSettings);
+        createSettingsRepository(userId).save(defaultSettings);
       }
       return stored
         ? { ...defaultSettings, ...JSON.parse(stored) }
@@ -116,8 +116,6 @@ export const createSettingsRepository = () => {
     },
     save: (settings: Settings) => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      // Also save the current space for the task repo to use.
-      localStorage.setItem("solo-flow-space", settings.space);
     },
   };
 };
@@ -129,11 +127,15 @@ export const createUserRepository = () => {
   const STORAGE_KEY = "pulse-note-users";
   return {
     findByEmail: (email: string): User | undefined => {
-      const users: User[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const users: User[] = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) || "[]"
+      );
       return users.find((user) => user.email === email);
     },
     save: (user: User) => {
-      const users: User[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const users: User[] = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) || "[]"
+      );
       users.push(user);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
     },

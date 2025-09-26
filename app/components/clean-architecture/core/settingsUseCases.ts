@@ -1,8 +1,11 @@
 import { createSettingsRepository } from "../adapters/repositories";
+import { createAuthUseCases } from "./authUseCases";
 import { Settings } from "./entities";
 
 export const createSettingsUseCases = () => {
-  const settingsRepo = createSettingsRepository();
+  const currentUser = createAuthUseCases().getCurrentUser();
+  const id = currentUser.user ? currentUser.user.id : "";
+  const settingsRepo = createSettingsRepository(id);
 
   return {
     getSettings: (): Settings => {

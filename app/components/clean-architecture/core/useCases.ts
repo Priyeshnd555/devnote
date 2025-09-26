@@ -37,7 +37,7 @@ export const createAppUseCases = (user: User | null) => {
         description: taskDescription,
         projectId,
       });
-      taskRepo.save(task, userId);
+      taskRepo.save(task);
       const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
       return {
         success: true,

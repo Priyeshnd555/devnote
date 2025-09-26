@@ -338,7 +338,7 @@ function TaskDescription({
   isEditing,
   task,
   handleEdit,
-  setIsEditing,
+  // setIsEditing,
   onProjectFilter,
 }: TaskDescriptionProps) {
   return (
