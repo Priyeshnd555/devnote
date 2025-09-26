@@ -1,24 +1,24 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { createAppUseCases } from "./components/clean-architecture/core/useCases";
-import { createAuthUseCases } from "./components/clean-architecture/core/authUseCases";
-import { createSettingsUseCases } from "./components/clean-architecture/core/settingsUseCases";
-import { Spaces } from "./components/clean-architecture/components/Spaces";
+import { createAppUseCases } from "./src/clean-architecture/core/useCases";
+import { createAuthUseCases } from "./src/clean-architecture/core/authUseCases";
+import { createSettingsUseCases } from "./src/clean-architecture/core/settingsUseCases";
+import { Spaces } from "./src/clean-architecture/components/Spaces";
 import {
   SettingsFactory,
   Task,
   Settings,
   User,
-} from "./components/clean-architecture/core/entities";
-import SignUpModal from "./components/clean-architecture/components/SignUpModal";
-import SignInModal from "./components/clean-architecture/components/SignInModal";
-import AuthPage from "./components/clean-architecture/components/AuthPage";
-import { Header } from "./components/features/Header";
-import { SearchBar } from "./components/features/SearchBar";
-import { TaskTabs } from "./components/features/TaskTabs";
-import { TaskList } from "./components/features/TaskList";
-import { Notification } from "./components/features/Notification";
+} from "./src/clean-architecture/core/entities";
+import SignUpModal from "./src/clean-architecture/components/SignUpModal";
+import SignInModal from "./src/clean-architecture/components/SignInModal";
+import AuthPage from "./src/clean-architecture/components/AuthPage";
+import { Header } from "./src/features/Header";
+import { SearchBar } from "./src/features/SearchBar";
+import { TaskTabs } from "./src/features/TaskTabs";
+import { TaskList } from "./src/features/TaskList";
+import { Notification } from "./src/features/Notification";
 
 // The main App component, acting as the primary UI driver.
 export default function App() {
