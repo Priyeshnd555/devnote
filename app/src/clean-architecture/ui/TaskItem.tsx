@@ -257,7 +257,7 @@ function Updates({
       )}
       <div className="updates-list mt-2 space-y-1">
         {task.updates?.map((update, index) => (
-          <JsonFormattedOutput key={index} str={update} />
+          <JsonFormattedOutput key={index} str={update}  />
         ))}
       </div>
       {showUpdateField && (

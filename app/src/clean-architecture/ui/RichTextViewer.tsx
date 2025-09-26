@@ -47,5 +47,5 @@ export const JsonFormattedOutput: React.FC<JsonFormattedOutputProps> = ({
     return isJson(str);
   }, [str]);
 
-  return <>{isJSON ? <code onClick={onClick} {...props}>{str}</code> : <p onClick={onClick} {...props}>{str}</p>}</>;
+  return <>{isJSON ? <code onClick={onClick} className={"whitespace-pre-wrap text-sm text-gray-400 min-h-[20px]"} {...props}>{str}</code> : <p onClick={onClick} className={"whitespace-pre-wrap text-sm text-gray-400 min-h-[20px]"} {...props}>{str}</p>}</>;
 };
