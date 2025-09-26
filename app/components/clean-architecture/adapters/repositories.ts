@@ -20,7 +20,7 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       const activeSpace =
         space || localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
       const raw: Task[] = JSON.parse(
-        localStorage.getItem(getStorageKey(activeSpace)) || "[]"
+        localStorage.getItem(getStorageKey(activeSpace)) || "[]",
       );
       // Dedupe by id to avoid rendering duplicates if historical data contains dupes
       const seen = new Set<string>();
@@ -35,7 +35,7 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       if (deduped.length !== raw.length) {
         localStorage.setItem(
           getStorageKey(activeSpace),
-          JSON.stringify(deduped)
+          JSON.stringify(deduped, null, 2)
         );
       }
       return deduped;
@@ -54,7 +54,7 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
         seen.add(t.id);
         return true;
       });
-      localStorage.setItem(getStorageKey(space), JSON.stringify(unique));
+      localStorage.setItem(getStorageKey(space), JSON.stringify(unique,null,2));
     },
     update: (updatedItem: Task) => {
       const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
@@ -64,7 +64,7 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       items = items.map((item) =>
         item.id === updatedItem.id ? updatedItem : item
       );
-      localStorage.setItem(getStorageKey(space), JSON.stringify(items));
+      localStorage.setItem(getStorageKey(space), JSON.stringify(items,null,2));
     },
     findById: (id: string): Task | undefined => {
       const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
@@ -88,7 +88,7 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       });
       localStorage.setItem(
         `${BASE_KEY}+${newUserId}+Work`,
-        JSON.stringify(unique)
+        JSON.stringify(unique,null,2)
       );
       // Clear anonymous tasks after merging
       localStorage.removeItem(`${BASE_KEY}+anonymous+Work`);
@@ -115,7 +115,7 @@ export const createSettingsRepository = (userId: string) => {
         : defaultSettings;
     },
     save: (settings: Settings) => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings,null,2));
     },
   };
 };
@@ -137,7 +137,7 @@ export const createUserRepository = () => {
         localStorage.getItem(STORAGE_KEY) || "[]"
       );
       users.push(user);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users,null,2));
     },
   };
 };
@@ -154,7 +154,7 @@ export const createAuthRepository = () => {
       return user ? JSON.parse(user) : null;
     },
     setAuthenticatedUser: (user: User) => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user,null,2));
     },
     clearAuthenticatedUser: () => {
       localStorage.removeItem(STORAGE_KEY);

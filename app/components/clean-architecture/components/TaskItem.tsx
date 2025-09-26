@@ -259,7 +259,7 @@ function Updates({
         {task.updates?.map((update, index) => (
           <p
             key={index}
-            className="text-sm text-gray-400 pl-2 border-l border-gray-700"
+            className="whitespace-pre-wrap text-sm text-gray-400 pl-2 border-l border-gray-700"
           >
             {" "}
             - {update}
@@ -312,7 +312,7 @@ function Details({ isEditing, task, handleEdit, setIsEditing }: DetailsProps) {
         />
       ) : (
         <p
-          className="text-sm text-gray-400 min-h-[20px]"
+          className="whitespace-pre-wrap text-sm text-gray-400 min-h-[20px]"
           onClick={() => setIsEditing("details")}
         >
           {task.details || "Add extra detailssss..."}
