@@ -149,6 +149,7 @@ export const createAuthRepository = () => {
   const STORAGE_KEY = "pulse-note-auth";
   return {
     getAuthenticatedUser: (): User | null => {
+      if (window == null) return null;
       const user = localStorage.getItem(STORAGE_KEY);
       return user ? JSON.parse(user) : null;
     },

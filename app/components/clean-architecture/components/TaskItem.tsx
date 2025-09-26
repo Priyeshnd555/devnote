@@ -338,13 +338,14 @@ function TaskDescription({
   isEditing,
   task,
   handleEdit,
-  // setIsEditing,
+  setIsEditing,
   onProjectFilter,
 }: TaskDescriptionProps) {
   return (
     <div
       className="flex items-center cursor-pointer"
       onClick={() => setIsDetailsOpen(!isDetailsOpen)}
+      onDoubleClick={()=>setIsEditing('description')}
     >
       {isEditing === "description" ? (
         <input
