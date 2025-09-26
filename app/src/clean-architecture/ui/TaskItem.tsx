@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RichTextViewer } from "./RichTextViewer";
+import { JsonFormattedOutput, RichTextViewer } from "./RichTextViewer";
 import { Task } from "../core/entities";
 
 interface TaskItemProps {
@@ -257,13 +257,7 @@ function Updates({
       )}
       <div className="updates-list mt-2 space-y-1">
         {task.updates?.map((update, index) => (
-          <p
-            key={index}
-            className="whitespace-pre-wrap text-sm text-gray-400 pl-2 border-l border-gray-700"
-          >
-            {" "}
-            - {update}
-          </p>
+          <JsonFormattedOutput key={index} str={update} />
         ))}
       </div>
       {showUpdateField && (
@@ -311,12 +305,7 @@ function Details({ isEditing, task, handleEdit, setIsEditing }: DetailsProps) {
           autoFocus
         />
       ) : (
-        <p
-          className="whitespace-pre-wrap text-sm text-gray-400 min-h-[20px]"
-          onClick={() => setIsEditing("details")}
-        >
-          {task.details || "Add extra detailssss..."}
-        </p>
+        <JsonFormattedOutput  str={task.details || "Add extra detailssss..."}  onClick={() => setIsEditing("details")} />
       )}
     </div>
   );

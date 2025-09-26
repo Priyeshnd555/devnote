@@ -34,15 +34,18 @@ export const RichTextViewer: React.FC<RichTextViewerProps> = ({ text }) => {
 
 interface JsonFormattedOutputProps {
   str: string;
+  onClick?: () =>void
 }
 
 export const JsonFormattedOutput: React.FC<JsonFormattedOutputProps> = ({
   str,
+  onClick,
+   ...props
 }) => {
-  
+
   const isJSON: boolean = useMemo(() => {
     return isJson(str);
   }, [str]);
 
-  return <>{isJSON ? <code>{str}</code> : <p>{str}</p>}</>;
+  return <>{isJSON ? <code onClick={onClick} {...props}>{str}</code> : <p onClick={onClick} {...props}>{str}</p>}</>;
 };
