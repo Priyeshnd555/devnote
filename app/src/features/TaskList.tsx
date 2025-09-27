@@ -130,6 +130,7 @@ export const TaskList = ({
     done: [],
   };
   tasks.forEach((task) => {
+    if (task.status == "paused") tasksByStatus["inbox"].push(task);
     if (tasksByStatus[task.status]) tasksByStatus[task.status].push(task);
   });
 
