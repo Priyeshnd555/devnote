@@ -4,6 +4,7 @@ import { Task } from "../core/entities";
 
 interface TaskItemProps {
   task: Task;
+  currentView: string
   onAction: (taskId: string, actionType: string) => void;
   onEditField: <K extends keyof Task>(taskId: string, field: K, value: Task[K]) => void;
   onAddUpdate: (taskId: string, updateText: string) => void;
@@ -22,6 +23,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   task,
   onAction,
   onEditField,
+  currentView,
   onAddUpdate,
   onProjectFilter,
   children,
@@ -92,6 +94,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
             {task.status !== "inbox" && (
               <Updates
+                currentView={currentView}
                 noUpdatesError={noUpdatesError}
                 task={task}
                 showUpdateField={showUpdateField}
@@ -231,6 +234,7 @@ function PausedRemarks({ isEditing, task, handleEdit, setIsEditing }: PausedRema
 interface UpdatesProps {
   noUpdatesError: boolean;
   task: Task;
+  currentView: string;
   showUpdateField: boolean;
   updateText: string;
   setUpdateText: (text: string) => void;
@@ -240,6 +244,7 @@ interface UpdatesProps {
 function Updates({
   noUpdatesError,
   task,
+  currentView,
   showUpdateField,
   updateText,
   setUpdateText,
@@ -274,12 +279,12 @@ function Updates({
           }}
         />
       )}
-      <button
+     {currentView != "inbox" && <button
         className="mt-2 py-1 px-3 bg-orange-600 hover:bg-orange-500 rounded-md text-sm font-medium text-white"
         onClick={handleUpdates}
       >
         {showUpdateField ? "Save Update" : "Add Update"}
-      </button>
+      </button>}
     </div>
   );
 }

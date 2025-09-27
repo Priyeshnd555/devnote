@@ -164,6 +164,7 @@ export const TaskList = ({
                   <TaskItem
                     key={task.id}
                     task={task}
+                    currentView={currentView}
                     onAction={onAction}
                     onEditField={onEditField}
                     onAddUpdate={onAddUpdate}
