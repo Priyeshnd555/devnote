@@ -20,7 +20,7 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       const activeSpace =
         space || localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
       const raw: Task[] = JSON.parse(
-        localStorage.getItem(getStorageKey(activeSpace)) || "[]",
+        localStorage.getItem(getStorageKey(activeSpace)) || "[]"
       );
       // Dedupe by id to avoid rendering duplicates if historical data contains dupes
       const seen = new Set<string>();
@@ -54,7 +54,10 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
         seen.add(t.id);
         return true;
       });
-      localStorage.setItem(getStorageKey(space), JSON.stringify(unique,null,2));
+      localStorage.setItem(
+        getStorageKey(space),
+        JSON.stringify(unique, null, 2)
+      );
     },
     update: (updatedItem: Task) => {
       const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
@@ -64,7 +67,10 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       items = items.map((item) =>
         item.id === updatedItem.id ? updatedItem : item
       );
-      localStorage.setItem(getStorageKey(space), JSON.stringify(items,null,2));
+      localStorage.setItem(
+        getStorageKey(space),
+        JSON.stringify(items, null, 2)
+      );
     },
     findById: (id: string): Task | undefined => {
       const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
@@ -88,7 +94,7 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       });
       localStorage.setItem(
         `${BASE_KEY}+${newUserId}+Work`,
-        JSON.stringify(unique,null,2)
+        JSON.stringify(unique, null, 2)
       );
       // Clear anonymous tasks after merging
       localStorage.removeItem(`${BASE_KEY}+anonymous+Work`);
@@ -115,7 +121,7 @@ export const createSettingsRepository = (userId: string) => {
         : defaultSettings;
     },
     save: (settings: Settings) => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings,null,2));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings, null, 2));
     },
   };
 };
@@ -137,7 +143,7 @@ export const createUserRepository = () => {
         localStorage.getItem(STORAGE_KEY) || "[]"
       );
       users.push(user);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(users,null,2));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users, null, 2));
     },
   };
 };
@@ -149,12 +155,12 @@ export const createAuthRepository = () => {
   const STORAGE_KEY = "pulse-note-auth";
   return {
     getAuthenticatedUser: (): User | null => {
-      if (window == null) return null;
+      // if (window == null) return null;
       const user = localStorage.getItem(STORAGE_KEY);
       return user ? JSON.parse(user) : null;
     },
     setAuthenticatedUser: (user: User) => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user,null,2));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user, null, 2));
     },
     clearAuthenticatedUser: () => {
       localStorage.removeItem(STORAGE_KEY);

@@ -84,7 +84,7 @@ export const JsonFormattedOutput: React.FC<JsonFormattedOutputProps> = ({
           className={"whitespace-pre-wrap text-sm text-gray-400 min-h-[20px]"}
           {...props}
         >
-          {str}
+         -  {str}
         </p>
       )}
     </>
