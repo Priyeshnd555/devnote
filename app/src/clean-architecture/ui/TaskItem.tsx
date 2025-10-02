@@ -29,7 +29,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   children,
 }) => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(
-    false
+    true
   );
   const [isEditing, setIsEditing] = useState<keyof Task | null>(null);
   const [updateText, setUpdateText] = useState("");
