@@ -25,7 +25,7 @@ export default function App() {
   // --- STATE MANAGEMENT ---
   const [tasks, setTasks] = useState<Task[]>([]);
   const [settings, setSettings] = useState<Settings>(SettingsFactory.create());
-  const [currentView, setCurrentView] = useState("inbox");
+  const [currentView, setCurrentView] = useState(tasks.filter(task=>(task.status == 'today')).length === 0 ? "today": "inbox");
   const [activeFilterProject, setActiveFilterProject] = useState<string | null>(
     null
   );
@@ -163,7 +163,7 @@ export default function App() {
     if (result.success) {
       setSettings(result.settings);
       setDataVersion((v) => v + 1);
-      setCurrentView("inbox"); // Reset view
+      setCurrentView(tasks.filter(task=>(task.status == "today")).length === 0 ? "today": "inbox"); // Reset view
       setNotification(`Switched to ${newSpace} space.`);
     }
   };
