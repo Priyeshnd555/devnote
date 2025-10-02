@@ -89,24 +89,6 @@ const DoneForm = ({ onSubmit, onCancel }: { onSubmit: (e: React.FormEvent<HTMLFo
   );
 };
 
-// const TaskItem = ({ task, onAction, onEditField, onAddUpdate, onProjectFilter, children }: { task: Task; onAction: (taskId: string, actionType: string) => void; onEditField: <K extends keyof Task>(taskId: string, field: K, value: Task[K]) => void; onAddUpdate: (taskId: string, updateText: string) => void; onProjectFilter: (projectId: string | null) => void; children: React.ReactNode; }) => {
-//     return (
-//         <div className="bg-gray-800 rounded-lg p-4 flex flex-col">
-//             <div className="flex justify-between items-start">
-//                 <span className="font-medium text-white">{task.description}</span>
-//                 <div className="flex space-x-2">
-//                     <button onClick={() => onAction(task.id, 'done')} className="text-gray-400 hover:text-white">Done</button>
-//                     <button onClick={() => onAction(task.id, 'pause')} className="text-gray-400 hover:text-white">Pause</button>
-//                     <button onClick={() => onAction(task.id, 'today')} className="text-gray-400 hover:text-white">Today</button>
-//                     <button onClick={() => onEditField(task.id, 'description', prompt('New description:', task.description) || task.description)} className="text-gray-400 hover:text-white">Edit</button>
-//                     <button onClick={() => onAddUpdate(task.id, prompt('New update:') || '')} className="text-gray-400 hover:text-white">Update</button>
-//                 </div>
-//             </div>
-//             {task.projectId && <span className="text-xs text-gray-400 cursor-pointer" onClick={() => onProjectFilter(task.projectId)}>#{task.projectId}</span>}
-//             {children}
-//         </div>
-//     )
-// }
 
 export const TaskList = ({
   tasks,
