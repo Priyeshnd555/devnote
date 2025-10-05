@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { JsonFormattedOutput, RichTextViewer } from "./RichTextViewer";
 import { Task } from "../core/entities";
 
@@ -17,6 +17,9 @@ interface ActionIconsProps {
   onAction: (taskId: string, actionType: string) => void;
   setNoUpdatesError: (error: boolean) => void;
   setUpdateField: (show: boolean) => void;
+}
+function textAreaAdjust(element: HTMLElement) {
+  element.style.height = (25+element.scrollHeight)+"px";
 }
 
 export const TaskItem: React.FC<TaskItemProps> = ({
@@ -252,7 +255,7 @@ function Updates({
 }: UpdatesProps) {
   return (
     <div className="mt-4">
-      <label className="block text-sm font-medium text-gray-300 mb-1">
+      <label className="block text-sm font-medium text-amber-600 mb-1">
         Updates:
       </label>
       {noUpdatesError && (
@@ -267,9 +270,10 @@ function Updates({
       </div>
       {showUpdateField && (
         <textarea
-          className="mt-2 w-full bg-gray-900 border border-gray-600 rounded-md p-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
+          className="mt-2 w-full bg-gray-900 border border-gray-600 rounded-md p-2 text-sm outline-none resize-none field-sizing-content"
           placeholder="Add an update..."
           value={updateText}
+          onKeyUp={()=>textAreaAdjust(this as HTMLElement)}
           onChange={(e) => setUpdateText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -297,21 +301,24 @@ interface DetailsProps {
 }
 
 function Details({ isEditing, task, handleEdit, setIsEditing }: DetailsProps) {
+
   return (
     <div className="mt-2">
       <label className="block text-sm font-medium text-gray-300 mb-1">
-        Details:
-      </label>
+        <b className="text-amber-600">Details:</b>
+    
       {isEditing === "details" ? (
         <textarea
-          className="w-full bg-gray-900 border border-gray-600 rounded-md p-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
+        onKeyUp={()=>textAreaAdjust(this as HTMLElement)}
+          className="w-full p-2 text-sm  field-sizing-content break-all outline-none resize-none bg-gray-800"
           defaultValue={task.details || ""}
           onBlur={(e) => handleEdit("details", e.target.value)}
           autoFocus
         />
       ) : (
-        <JsonFormattedOutput  str={task.details || "Add extra detailssss..."}  onClick={() => setIsEditing("details")} />
+        <JsonFormattedOutput  str={task.details || "Add extra details Here..."}  onClick={() => setIsEditing("details")} />
       )}
+        </label>
     </div>
   );
 }

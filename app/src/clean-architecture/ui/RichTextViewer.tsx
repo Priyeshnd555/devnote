@@ -79,13 +79,15 @@ export const JsonFormattedOutput: React.FC<JsonFormattedOutputProps> = ({
           {str}
         </code>
       ) : (
-        <p
-          onClick={onClick}
-          className={"whitespace-pre-wrap text-sm text-gray-400 min-h-[20px]"}
-          {...props}
-        >
-         -  {str}
-        </p>
+        <div
+  onClick={onClick}
+  className="flex items-start whitespace-pre-wrap text-sm text-gray-400 min-h-[20px] break-words break-all"
+  {...props}
+>
+  <div className="ml-[15px] mr-3">-</div>
+  <div>{str}</div>
+</div>
+
       )}
     </>
   );
