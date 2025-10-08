@@ -13,7 +13,7 @@ export const Spaces: React.FC<SpacesProps> = ({  handleSpaceChange }) => {
     { id: "space-project", value: "Project", label: "Project Day" },
   ];
 
-  const [currentSpace , setCurrentSpace] = useState({space:"work"});
+  const [currentSpace , setCurrentSpace] = useState<Settings | null>();
 
   const onHandleChange = (data:  "Work" | "Personal" | "Project") =>{
     setCurrentSpace({space: data});
@@ -46,7 +46,7 @@ export const Spaces: React.FC<SpacesProps> = ({  handleSpaceChange }) => {
                 id={option.id}
                 name="space"
                 value={option.value}
-                checked={currentSpace.space === option.value}
+                checked={currentSpace?.space === option.value}
                 onChange={(e) => onHandleChange(e.target.value as Settings['space'])}
                 className="form-radio h-5 w-5 text-orange-600 bg-gray-700 border-gray-600 focus:ring-orange-500"
               />

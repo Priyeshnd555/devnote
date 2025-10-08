@@ -115,12 +115,12 @@ export const createSettingsRepository = (userId: string) => {
   const defaultSettings = SettingsFactory.create();
   return {
     get: (): Settings => {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "");
       if (Boolean(stored) === false) {
         createSettingsRepository(userId).save(defaultSettings);
       }
       return stored
-        ? { ...defaultSettings, ...JSON.parse(stored) }
+        ? { space: stored }
         : defaultSettings;
     },
     save: (settings: Settings) => {
