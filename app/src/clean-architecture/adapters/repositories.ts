@@ -15,6 +15,8 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
   const BASE_KEY = "solo-flow-tasks";
   const getStorageKey = (space: string) => `${BASE_KEY}+${userId}+${space}`;
 
+  userId = createAuthRepository().getAuthenticatedUser()?.id ?? "anonymous";
+
   return {
     getAll: (space: string): Task[] => {
       const activeSpace =
@@ -108,6 +110,7 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
  * A specific repository for storing the user settings object.
  */
 export const createSettingsRepository = (userId: string) => {
+  userId = createAuthRepository().getAuthenticatedUser()?.id ?? "anonymous";
   const STORAGE_KEY = `solo-flow-space-${userId}`;
   const defaultSettings = SettingsFactory.create();
   return {
@@ -121,7 +124,10 @@ export const createSettingsRepository = (userId: string) => {
         : defaultSettings;
     },
     save: (settings: Settings) => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings, null, 2));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(settings.space, null, 2)
+      );
     },
   };
 };

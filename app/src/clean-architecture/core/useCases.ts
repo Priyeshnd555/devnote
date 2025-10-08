@@ -1,5 +1,6 @@
 import { createLocalStorageRepository } from "../adapters/repositories";
-import { TaskFactory, Task, User } from "./entities";
+import { createAuthUseCases } from "./authUseCases";
+import { TaskFactory, Task,} from "./entities";
 
 /**
  * --- USE CASES ---
@@ -8,9 +9,10 @@ import { TaskFactory, Task, User } from "./entities";
  * This is where all your application's unique rules live.
  */
 
-export const createAppUseCases = (user: User | null) => {
-  const userId = user?.id ?? "anonymous";
-  const taskRepo = createLocalStorageRepository(userId);
+export const createAppUseCases = () => {
+  const { user } = createAuthUseCases().getCurrentUser();
+  const taskRepo = createLocalStorageRepository(user?.id);
+  const userId = user?.id ?? 'anonymous';
 
   return {
     // Gets all necessary data to bootstrap the application.

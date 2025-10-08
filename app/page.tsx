@@ -6,9 +6,7 @@ import { createAuthUseCases } from "./src/clean-architecture/core/authUseCases";
 import { createSettingsUseCases } from "./src/clean-architecture/core/settingsUseCases";
 import { Spaces } from "./src/clean-architecture/ui/Spaces";
 import {
-  SettingsFactory,
   Task,
-  Settings,
   User,
 } from "./src/clean-architecture/core/entities";
 import SignUpModal from "./src/clean-architecture/ui/SignUpModal";
@@ -24,7 +22,6 @@ import { Notification } from "./src/features/Notification";
 export default function App() {
   // --- STATE MANAGEMENT ---
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [settings, setSettings] = useState<Settings>(SettingsFactory.create());
   const [currentView, setCurrentView] = useState(tasks.filter(task=>(task.status == 'today')).length === 0 ? "today": "inbox");
   const [activeFilterProject, setActiveFilterProject] = useState<string | null>(
     null
@@ -42,8 +39,9 @@ export default function App() {
   const authUseCases = useMemo(() => createAuthUseCases(), []);
   const settingsUseCases = useMemo(() => createSettingsUseCases(), []);
   const appUseCases = useMemo(() => {
-    return createAppUseCases(currentUser);
+    return createAppUseCases();
   }, [currentUser]);
+
 
   // --- EFFECTS ---
   useEffect(() => {
@@ -54,10 +52,8 @@ export default function App() {
 
   useEffect(() => {
     const initialState = appUseCases.getInitialState();
-    const initialSettings = settingsUseCases.getSettings();
     setTasks(initialState.tasks);
-    setSettings(initialSettings);
-  }, [appUseCases, dataVersion, settingsUseCases]);
+  }, [appUseCases, dataVersion, settingsUseCases,]);
 
   useEffect(() => {
     if (notification) {
@@ -161,9 +157,8 @@ export default function App() {
   const handleSpaceChange = (newSpace: "Work" | "Personal" | "Project") => {
     const result = settingsUseCases.setSpace(newSpace);
     if (result.success) {
-      setSettings(result.settings);
       setDataVersion((v) => v + 1);
-      setCurrentView(tasks.filter(task=>(task.status == "today")).length === 0 ? "today": "inbox"); // Reset view
+      // setCurrentView(tasks.filter(task=>(task.status == "today")).length === 0 ? "today": "inbox"); // Reset view
       setNotification(`Switched to ${newSpace} space.`);
     }
   };
@@ -278,7 +273,7 @@ export default function App() {
         <div>
           {currentView === "spaces" && (
             <Spaces
-              currentSpace={settings.space}
+              
               handleSpaceChange={handleSpaceChange}
             />
           )}

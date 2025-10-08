@@ -1,16 +1,32 @@
+import { useEffect, useState } from "react";
 import { Settings } from "../core/entities";
+import { createSettingsUseCases } from "../core/settingsUseCases";
 
 interface SpacesProps {
-  currentSpace: Settings['space'];
   handleSpaceChange: (space: Settings['space']) => void;
 }
 
-export const Spaces: React.FC<SpacesProps> = ({ currentSpace, handleSpaceChange }) => {
+export const Spaces: React.FC<SpacesProps> = ({  handleSpaceChange }) => {
   const options = [
     { id: "space-work", value: "Work", label: "Work Day" },
     { id: "space-personal", value: "Personal", label: "Personal Day" },
     { id: "space-project", value: "Project", label: "Project Day" },
   ];
+
+  const [currentSpace , setCurrentSpace] = useState({space:"work"});
+
+  const onHandleChange = (data:  "Work" | "Personal" | "Project") =>{
+    setCurrentSpace({space: data});
+    handleSpaceChange(data);
+  }
+
+  
+  useEffect(()=>{
+
+     const settings = createSettingsUseCases().getSettings();
+     setCurrentSpace(settings);
+  },[])
+
   return (
     <div className="max-w-md w-full p-4">
       <fieldset>
@@ -30,8 +46,8 @@ export const Spaces: React.FC<SpacesProps> = ({ currentSpace, handleSpaceChange 
                 id={option.id}
                 name="space"
                 value={option.value}
-                checked={currentSpace === option.value}
-                onChange={(e) => handleSpaceChange(e.target.value as Settings['space'])}
+                checked={currentSpace.space === option.value}
+                onChange={(e) => onHandleChange(e.target.value as Settings['space'])}
                 className="form-radio h-5 w-5 text-orange-600 bg-gray-700 border-gray-600 focus:ring-orange-500"
               />
             </label>

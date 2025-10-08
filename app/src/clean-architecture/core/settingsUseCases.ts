@@ -18,7 +18,7 @@ export const createSettingsUseCases = () => {
       const settings = settingsRepo.get();
       settings.space = space;
       settingsRepo.save(settings);
-      return { success: true, settings: settingsRepo.get() };
+      return { success: true, settings: settings };
     },
   };
 };
