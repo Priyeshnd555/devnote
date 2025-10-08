@@ -273,7 +273,7 @@ function Updates({
           className="mt-2 w-full bg-gray-900 border border-gray-600 rounded-md p-2 text-sm outline-none resize-none field-sizing-content"
           placeholder="Add an update..."
           value={updateText}
-          onKeyUp={()=>textAreaAdjust(this as HTMLElement)}
+          onKeyUp={(e)=>textAreaAdjust(e.target as HTMLElement)}
           onChange={(e) => setUpdateText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -309,7 +309,7 @@ function Details({ isEditing, task, handleEdit, setIsEditing }: DetailsProps) {
     
       {isEditing === "details" ? (
         <textarea
-        onKeyUp={()=>textAreaAdjust(this as HTMLElement)}
+        onKeyUp={(e)=>textAreaAdjust(e.target as HTMLElement)}
           className="w-full p-2 text-sm  field-sizing-content break-all outline-none resize-none bg-gray-800"
           defaultValue={task.details || ""}
           onBlur={(e) => handleEdit("details", e.target.value)}
