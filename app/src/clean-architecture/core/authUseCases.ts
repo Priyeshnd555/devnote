@@ -9,11 +9,22 @@ import { UserFactory, User } from "./entities";
  * --- AUTH USE CASES ---
  * Handles all authentication-related logic.
  */
+const userRepo =
+  typeof window !== "undefined"
+    ? createUserRepository()
+    : { findByEmail: () => {}, save: () => {} };
+const authRepo =
+  typeof window !== "undefined"
+    ? createAuthRepository()
+    : {
+        setAuthenticatedUser: () => {},
+        clearAuthenticatedUser: () => {},
+        getAuthenticatedUser: () => {
+          return null;
+        },
+      };
 
 export const createAuthUseCases = () => {
-  const userRepo = createUserRepository();
-  const authRepo = createAuthRepository();
-
   return {
     // Signs up a new user.
     signUp: (
