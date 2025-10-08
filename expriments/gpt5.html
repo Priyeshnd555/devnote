@@ -257,7 +257,7 @@ const adapters = (function(){
   const STORAGE_KEY = 'solo_brutalist_v1';
   function loadAll(){
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage?.getItem(STORAGE_KEY);
       if(!raw) return {tasks:[],progress:[],prefs:{mode:'Normal',notify:false},undo:[]};
       return JSON.parse(raw);
     }catch(e){

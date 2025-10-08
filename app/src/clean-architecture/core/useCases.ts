@@ -1,6 +1,6 @@
 import { createLocalStorageRepository } from "../adapters/repositories";
 import { createAuthUseCases } from "./authUseCases";
-import { TaskFactory, Task,} from "./entities";
+import { TaskFactory, Task } from "./entities";
 
 /**
  * --- USE CASES ---
@@ -12,12 +12,13 @@ import { TaskFactory, Task,} from "./entities";
 export const createAppUseCases = () => {
   const { user } = createAuthUseCases().getCurrentUser();
   const taskRepo = createLocalStorageRepository(user?.id);
-  const userId = user?.id ?? 'anonymous';
+  const userId = user?.id ?? "anonymous";
 
   return {
     // Gets all necessary data to bootstrap the application.
     getInitialState: (): { tasks: Task[] } => {
-      const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+      const space =
+        localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
       return {
         tasks: taskRepo.getAll(space),
       };
@@ -40,7 +41,8 @@ export const createAppUseCases = () => {
         projectId,
       });
       taskRepo.save(task);
-      const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+      const space =
+        localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
       return {
         success: true,
         tasks: taskRepo.getAll(space),
@@ -56,7 +58,7 @@ export const createAppUseCases = () => {
         task.status = "today";
         taskRepo.update(task);
         const space =
-          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+          localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
           tasks: taskRepo.getAll(space),
@@ -77,7 +79,7 @@ export const createAppUseCases = () => {
         task.resumeDate = resumeDate;
         taskRepo.update(task);
         const space =
-          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+          localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
           tasks: taskRepo.getAll(space),
@@ -97,7 +99,7 @@ export const createAppUseCases = () => {
         task.resumeDate = null;
         taskRepo.update(task);
         const space =
-          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+          localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
           tasks: taskRepo.getAll(space),
@@ -118,7 +120,7 @@ export const createAppUseCases = () => {
         task.completedAt = new Date().toISOString();
         taskRepo.update(task);
         const space =
-          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+          localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
           tasks: taskRepo.getAll(space),
@@ -138,7 +140,7 @@ export const createAppUseCases = () => {
         task[field] = value;
         taskRepo.update(task);
         const space =
-          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+          localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
           tasks: taskRepo.getAll(space),
@@ -157,7 +159,7 @@ export const createAppUseCases = () => {
         task.updates = [updateText, ...(task.updates || [])];
         taskRepo.update(task);
         const space =
-          localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+          localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
         return {
           success: true,
           tasks: taskRepo.getAll(space),

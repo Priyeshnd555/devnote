@@ -20,9 +20,9 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
   return {
     getAll: (space: string): Task[] => {
       const activeSpace =
-        space || localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+        space || localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
       const raw: Task[] = JSON.parse(
-        localStorage.getItem(getStorageKey(activeSpace)) || "[]"
+        localStorage?.getItem(getStorageKey(activeSpace)) || "[]"
       );
       // Dedupe by id to avoid rendering duplicates if historical data contains dupes
       const seen = new Set<string>();
@@ -43,9 +43,9 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       return deduped;
     },
     save: (item: Task) => {
-      const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+      const space = localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
       const items: Task[] = JSON.parse(
-        localStorage.getItem(getStorageKey(space)) || "[]"
+        localStorage?.getItem(getStorageKey(space)) || "[]"
       );
       items.unshift(item); // Add new items to the top
       // Ensure we never persist duplicates by id
@@ -62,9 +62,9 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       );
     },
     update: (updatedItem: Task) => {
-      const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+      const space = localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
       let items: Task[] = JSON.parse(
-        localStorage.getItem(getStorageKey(space)) || "[]"
+        localStorage?.getItem(getStorageKey(space)) || "[]"
       );
       items = items.map((item) =>
         item.id === updatedItem.id ? updatedItem : item
@@ -75,9 +75,9 @@ export const createLocalStorageRepository = (userId: string = "anonymous") => {
       );
     },
     findById: (id: string): Task | undefined => {
-      const space = localStorage.getItem(`solo-flow-space-${userId}`) || "Work";
+      const space = localStorage?.getItem(`solo-flow-space-${userId}`) || "Work";
       const items: Task[] = JSON.parse(
-        localStorage.getItem(getStorageKey(space)) || "[]"
+        localStorage?.getItem(getStorageKey(space)) || "[]"
       );
       return items.find((item) => item.id === id);
     },
@@ -115,13 +115,13 @@ export const createSettingsRepository = (userId: string) => {
   const defaultSettings = SettingsFactory.create();
   return {
     get: (): Settings => {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "");
+      const stored = JSON.parse(
+        String(localStorage?.getItem(STORAGE_KEY)) ?? ""
+      );
       if (Boolean(stored) === false) {
         createSettingsRepository(userId).save(defaultSettings);
       }
-      return stored
-        ? { space: stored }
-        : defaultSettings;
+      return stored ? { space: stored } : defaultSettings;
     },
     save: (settings: Settings) => {
       localStorage.setItem(
@@ -140,13 +140,13 @@ export const createUserRepository = () => {
   return {
     findByEmail: (email: string): User | undefined => {
       const users: User[] = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "[]"
+        localStorage?.getItem(STORAGE_KEY) || "[]"
       );
       return users.find((user) => user.email === email);
     },
     save: (user: User) => {
       const users: User[] = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "[]"
+        localStorage?.getItem(STORAGE_KEY) || "[]"
       );
       users.push(user);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(users, null, 2));
@@ -162,7 +162,7 @@ export const createAuthRepository = () => {
   return {
     getAuthenticatedUser: (): User | null => {
       if (typeof window === "undefined") return null;
-      const user = localStorage.getItem(STORAGE_KEY);
+      const user = localStorage?.getItem(STORAGE_KEY);
       return user ? JSON.parse(user) : null;
     },
     setAuthenticatedUser: (user: User) => {
