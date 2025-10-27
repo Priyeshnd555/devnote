@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Perfectionist's To-Do</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for aesthetic */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        :root {
+            --color-primary: #588157; /* Deep Green */
+            --color-secondary: #DAD7CD; /* Cream/Off-White */
+            --color-focus: #3A5A40; /* Darker Green for Focus */
+            --color-completed: #A3B18A; /* Light Sage */
+            --color-parked: #344E41; /* Darker tone for later */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-secondary);
+            transition: all 0.3s ease;
+        }
+        .container {
+            max-width: 900px;
+        }
+        .task-input-container {
+            background-color: #f7f7f7;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .task-item {
+            border-radius: 0.75rem;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .task-item:hover {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .focus-ring {
+            border: 2px solid var(--color-focus);
+            background-color: #eaf1e7 !important;
+        }
+        .completed-task {
+            text-decoration: line-through;
+            opacity: 0.6;
+            background-color: var(--color-completed);
+        }
+        .parked-list-container {
+            background-color: var(--color-parked);
+            color: #fff;
+            border-radius: 1rem;
+        }
+        .parked-task-item {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        /* Icon styles */
+        .icon {
+            width: 24px;
+            height: 24px;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 min-h-screen">
+
+    <!-- Main Container -->
+    <div class="container mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-5xl font-extrabold text-gray-800 tracking-tight">The Perfectionist's Flow</h1>
+            <p class="mt-2 text-gray-600 text-lg italic">Focus on one task perfectly. Park the rest gently.</p>
+        </header>
+
+        <!-- Task Input -->
+        <div id="auth-status" class="text-xs text-right mb-2 text-gray-500">Loading authentication...</div>
+        <div class="task-input-container p-4 mb-8 flex items-center shadow-lg">
+            <input type="text" id="new-task-text" placeholder="What is the next perfect thing to do?"
+                   class="flex-grow p-3 text-lg border-none focus:outline-none bg-transparent" />
+            <button id="add-task-btn"
+                    class="ml-3 px-4 py-2 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-150 shadow-md">
+                Add Task
+            </button>
+        </div>
+
+        <!-- System Message Box (For completion messages) -->
+        <div id="message-box" class="fixed inset-x-0 bottom-0 mb-4 mx-auto w-11/12 sm:w-1/3 p-4 bg-yellow-400 text-gray-800 font-bold text-center rounded-lg shadow-2xl opacity-0 transition-opacity duration-500 pointer-events-none">
+            Well done! Task completed. Take a breath.
+        </div>
+
+        <!-- Task Sections Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 1. Focus Task Section -->
+            <div id="focus-task-container" class="lg:col-span-1 p-6 bg-white rounded-xl shadow-lg border-t-4 border-[var(--color-focus)]">
+                <h2 class="text-2xl font-bold mb-4 text-[var(--color-focus)] flex items-center">
+                    <svg class="icon mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                    The Focus Task
+                </h2>
+                <div id="focus-task-list" class="space-y-3 min-h-[50px] flex flex-col justify-center">
+                    <p id="focus-placeholder" class="text-gray-500 text-center italic">
+                        Select a task below to become your single focus.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 2. Active Tasks Section -->
+            <div class="lg:col-span-2">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                    <svg class="icon mr-2 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    Active Flow
+                </h2>
+                <div id="active-task-list" class="space-y-3 min-h-[100px]">
+                    <p class="text-gray-500 italic">No active tasks. Add one!</p>
+                </div>
+
+                <!-- Toggle for Completed Tasks -->
+                <button id="toggle-completed-btn" class="mt-8 text-sm text-gray-600 hover:text-gray-900 transition flex items-center">
+                    <span id="completed-count">0</span> Completed Tasks
+                    <svg class="icon w-4 h-4 ml-1 transform transition" id="toggle-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+
+                <!-- Completed Tasks List -->
+                <div id="completed-task-list" class="mt-4 space-y-3 hidden">
+                    <!-- Completed tasks will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Parking Lot Section (Full Width, below the grid) -->
+        <div id="parking-lot-container" class="mt-12 p-6 parked-list-container">
+            <h2 class="text-2xl font-bold mb-4 text-white flex items-center">
+                <svg class="icon mr-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                The Parking Lot (Tasks for Later)
+            </h2>
+            <div id="parked-task-list" class="space-y-3 min-h-[50px]">
+                <p class="text-gray-400 italic">Nothing parked. Moving tasks here reduces clutter and promotes focus.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Script Includes -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, collection, query, where, addDoc, updateDoc, deleteDoc, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId = null;
+        let isAuthReady = false;
+
+        const TASK_COLLECTION = 'perfectionist_todos';
+
+        // --- Core Firebase Initialization and Authentication ---
+
+        const initFirebase = async () => {
+            if (!firebaseConfig) {
+                console.error("Firebase config is missing.");
+                document.getElementById('auth-status').textContent = 'Error: Firebase config missing.';
+                return;
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('Debug'); // Enable detailed Firestore logging
+
+                document.getElementById('auth-status').textContent = 'Authenticating...';
+
+                // Sign-in logic
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Auth state change listener
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        isAuthReady = true;
+                        document.getElementById('auth-status').textContent = `User ID: ${userId.substring(0, 8)}...`;
+                        console.log("Firebase initialized and authenticated. User ID:", userId);
+
+                        // Start listening to data once authenticated
+                        setupRealtimeListener();
+
+                    } else {
+                        userId = null;
+                        isAuthReady = true; // Still ready, but anonymous/unauthenticated
+                        document.getElementById('auth-status').textContent = 'Signed in anonymously.';
+                        console.log("User signed out or failed to authenticate.");
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                document.getElementById('auth-status').textContent = 'Authentication Failed!';
+            }
+        };
+
+        // --- Firestore Utility Functions ---
+
+        const getCollectionRef = () => {
+            if (!db || !userId) {
+                console.error("Database or User ID not available.");
+                return null;
+            }
+            // Private data path: /artifacts/{appId}/users/{userId}/{collectionName}
+            const collectionPath = `/artifacts/${appId}/users/${userId}/${TASK_COLLECTION}`;
+            return collection(db, collectionPath);
+        };
+
+        const setupRealtimeListener = () => {
+            const tasksRef = getCollectionRef();
+            if (!tasksRef) return;
+
+            // Simple query to fetch all tasks for the user
+            const q = query(tasksRef);
+
+            onSnapshot(q, (snapshot) => {
+                const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderTasks(tasks);
+            }, (error) => {
+                console.error("Error fetching tasks:", error);
+            });
+        };
+
+        const addTask = async (text) => {
+            const tasksRef = getCollectionRef();
+            if (!tasksRef || !text.trim()) return;
+
+            const newTask = {
+                text: text.trim(),
+                isFocus: false,
+                isParked: false,
+                isCompleted: false,
+                createdAt: serverTimestamp(),
+            };
+
+            try {
+                await addDoc(tasksRef, newTask);
+                document.getElementById('new-task-text').value = '';
+            } catch (error) {
+                console.error("Error adding task:", error);
+            }
+        };
+
+        const updateTaskStatus = async (taskId, updates) => {
+            const docRef = doc(getCollectionRef(), taskId);
+            try {
+                await updateDoc(docRef, updates);
+            } catch (error) {
+                console.error("Error updating task status:", error);
+            }
+        };
+
+        const deleteTask = async (taskId) => {
+            if (!confirm('Are you sure you want to delete this task?')) return;
+            const docRef = doc(getCollectionRef(), taskId);
+            try {
+                await deleteDoc(docRef);
+            } catch (error) {
+                console.error("Error deleting task:", error);
+            }
+        };
+
+        // --- UI Rendering and Event Handlers ---
+
+        const showMessage = (text) => {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = text;
+            messageBox.classList.remove('opacity-0', 'pointer-events-none');
+            messageBox.classList.add('opacity-100');
+
+            setTimeout(() => {
+                messageBox.classList.remove('opacity-100');
+                messageBox.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        };
+
+        const renderTaskItem = (task) => {
+            const li = document.createElement('div');
+            li.id = `task-${task.id}`;
+            li.className = `task-item flex items-center justify-between p-3 my-2 shadow-sm ${
+                task.isFocus ? 'focus-ring bg-white' : 
+                task.isCompleted ? 'completed-task' : 
+                task.isParked ? 'parked-task-item' : 'bg-white'
+            }`;
+
+            const textDiv = document.createElement('div');
+            textDiv.className = `flex-grow ${task.isCompleted ? 'line-through text-gray-500' : 'text-gray-800'}`;
+            textDiv.textContent = task.text;
+
+            const actionContainer = document.createElement('div');
+            actionContainer.className = 'flex items-center space-x-2 ml-4';
+
+            // 1. Complete Button
+            const completeBtn = document.createElement('button');
+            completeBtn.innerHTML = task.isCompleted ? 
+                `<svg class="icon w-6 h-6 text-green-700" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>` :
+                `<svg class="icon w-6 h-6 text-gray-400 hover:text-green-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+            completeBtn.onclick = async () => {
+                await updateTaskStatus(task.id, { isCompleted: !task.isCompleted, isFocus: false, isParked: false });
+                if (!task.isCompleted) {
+                    showMessage("Perfection achieved! Well done.");
+                }
+            };
+
+            // 2. Focus Button (Only for Active/Parked tasks)
+            if (!task.isCompleted && !task.isParked) {
+                const focusBtn = document.createElement('button');
+                focusBtn.innerHTML = task.isFocus ? 
+                    `<svg class="icon w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 011 1v.054A7.001 7.001 0 0012 18h2a8 8 0 01-14.992-3.834L7 13v.005a1 1 0 001.996.002V13l-.004-.005a6.002 6.002 0 0110.995-5.263zM10 4a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM5 8a1 1 0 011-1h1a1 1 0 110 2H6a1 1 0 01-1-1zM10 16a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM15 8a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1z"></path></svg>` :
+                    `<svg class="icon w-6 h-6 text-gray-400 hover:text-yellow-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.152A1.405 1.405 0 0112 3.237c.307.512.193 1.144-.308 1.638l-4.707 4.707L13.5 15.5l.707.707-4.707 4.707L6 18.5l-.707-.707 4.707-4.707-4.707-4.707A1.5 1.5 0 015 8.5V4.5A1.5 1.5 0 016.5 3h4.5a1.5 1.5 0 011.5 1.5v4"></path></svg>`;
+                focusBtn.title = "Set as Focus Task";
+                focusBtn.onclick = async () => {
+                    // When setting a focus task, clear focus from all others
+                    if (!task.isFocus) {
+                        const allActiveTasks = document.querySelectorAll('#active-task-list .task-item, #focus-task-list .task-item');
+                        allActiveTasks.forEach(item => {
+                            if (item.id !== li.id && item.dataset.isFocus === 'true') {
+                                updateTaskStatus(item.id.replace('task-', ''), { isFocus: false });
+                            }
+                        });
+                    }
+                    await updateTaskStatus(task.id, { isFocus: !task.isFocus, isParked: false });
+                };
+                actionContainer.appendChild(focusBtn);
+            }
+
+            // 3. Park/Unpark Button (Only for Active/Focus tasks)
+            if (!task.isCompleted) {
+                const parkBtn = document.createElement('button');
+                parkBtn.innerHTML = task.isParked ? 
+                    `<svg class="icon w-6 h-6 text-gray-300 hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>` :
+                    `<svg class="icon w-6 h-6 text-gray-400 hover:text-[var(--color-parked)] transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>`;
+                parkBtn.title = task.isParked ? "Unpark/Activate" : "Park for Later";
+                parkBtn.onclick = () => {
+                    updateTaskStatus(task.id, { isParked: !task.isParked, isFocus: false });
+                };
+                actionContainer.appendChild(parkBtn);
+            }
+
+            // 4. Delete Button (Universal)
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = `<svg class="icon w-6 h-6 text-gray-400 hover:text-red-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
+            deleteBtn.title = "Delete Task";
+            deleteBtn.onclick = () => deleteTask(task.id);
+            
+            actionContainer.appendChild(completeBtn);
+            actionContainer.appendChild(deleteBtn);
+
+            li.appendChild(textDiv);
+            li.appendChild(actionContainer);
+            return li;
+        };
+
+        const renderTasks = (tasks) => {
+            const focusList = document.getElementById('focus-task-list');
+            const activeList = document.getElementById('active-task-list');
+            const parkedList = document.getElementById('parked-task-list');
+            const completedList = document.getElementById('completed-task-list');
+            const completedCountSpan = document.getElementById('completed-count');
+
+            // Clear lists
+            focusList.innerHTML = '';
+            activeList.innerHTML = '';
+            parkedList.innerHTML = '';
+            completedList.innerHTML = '';
+
+            // Filter and sort (in memory, by creation time descending)
+            const sortedTasks = tasks.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+
+            const activeTasks = sortedTasks.filter(t => !t.isCompleted && !t.isParked && !t.isFocus);
+            const focusTask = sortedTasks.find(t => t.isFocus && !t.isCompleted);
+            const parkedTasks = sortedTasks.filter(t => t.isParked && !t.isCompleted);
+            const completedTasks = sortedTasks.filter(t => t.isCompleted);
+
+            completedCountSpan.textContent = completedTasks.length;
+
+            // 1. Render Focus Task
+            if (focusTask) {
+                focusList.appendChild(renderTaskItem(focusTask));
+                document.getElementById('focus-placeholder')?.remove();
+            } else {
+                focusList.innerHTML = `<p id="focus-placeholder" class="text-gray-500 text-center italic">Select a task below to become your single focus.</p>`;
+            }
+
+            // 2. Render Active Tasks
+            if (activeTasks.length > 0) {
+                activeTasks.forEach(task => activeList.appendChild(renderTaskItem(task)));
+            } else if (!focusTask) {
+                activeList.innerHTML = `<p class="text-gray-500 italic">No tasks in your immediate flow. Time to create one!</p>`;
+            } else {
+                 activeList.innerHTML = `<p class="text-gray-500 italic">You have a Focus Task! Clear active tasks for maximum perfection.</p>`;
+            }
+
+            // 3. Render Parked Tasks
+            if (parkedTasks.length > 0) {
+                parkedTasks.forEach(task => parkedList.appendChild(renderTaskItem(task)));
+            } else {
+                parkedList.innerHTML = `<p class="text-gray-400 italic">Nothing parked. Moving tasks here reduces clutter and promotes focus.</p>`;
+            }
+            
+            // 4. Render Completed Tasks
+            if (completedTasks.length > 0) {
+                completedTasks.forEach(task => completedList.appendChild(renderTaskItem(task)));
+            } else {
+                completedList.innerHTML = `<p class="text-gray-500 italic">Great work so far! History will be kept here.</p>`;
+            }
+        };
+
+        const setupEventListeners = () => {
+            // Add Task
+            document.getElementById('add-task-btn').addEventListener('click', () => {
+                const input = document.getElementById('new-task-text');
+                addTask(input.value);
+            });
+
+            document.getElementById('new-task-text').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const input = document.getElementById('new-task-text');
+                    addTask(input.value);
+                }
+            });
+
+            // Toggle Completed Tasks
+            document.getElementById('toggle-completed-btn').addEventListener('click', () => {
+                const completedList = document.getElementById('completed-task-list');
+                const toggleIcon = document.getElementById('toggle-icon');
+                const isHidden = completedList.classList.toggle('hidden');
+                
+                if (isHidden) {
+                    toggleIcon.classList.remove('rotate-180');
+                } else {
+                    toggleIcon.classList.add('rotate-180');
+                }
+            });
+        };
+
+        // --- Start Application ---
+        window.onload = () => {
+            initFirebase();
+            setupEventListeners();
+        };
+
+    </script>
+</body>
+</html>
